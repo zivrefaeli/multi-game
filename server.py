@@ -135,7 +135,7 @@ class ServerUI(Tk):
             if init_packet.type == CLOSE_SERVER_TYPE:
                 self.running = False
                 App.send(client, Packet(SERVER_CLOSED_TYPE))
-                print('server closed by client')
+                print('server closed by CloseSeverClient')
             elif init_packet.type == ID_TYPE:
                 client_id = init_packet.data
                 client_thread = HandleClient(client, client_address, client_id, self)
@@ -207,14 +207,21 @@ class HandleClient(Thread):
         status = self.INVALID if self.id in CONNECTED_USERS else self.VALID 
         App.send(self.client, Packet(ID_STATUS_TYPE, status))
         if status == self.INVALID:
+            print('client joined with invalid id')
+            self.client.close()
             return
-        CONNECTED_USERS.add(self.id)
         
+        CONNECTED_USERS.add(self.id)
+
+        # TODO: edit server textarea view
         self.server_ui.textarea.insert(INSERT, f'{self.id}\n')
 
         while self.server_ui.running:
             packet = App.receive(self.client)
             if packet.type == ERROR_TYPE:
+                break
+            if packet.type == DISCONNECT_TYPE:
+                print(f'{self.id} disconnected from the server')
                 break
 
             DATABASE[self.id] = packet.data
@@ -224,6 +231,7 @@ class HandleClient(Thread):
         print(f'deleting {self.id} data: {DATABASE.pop(self.id)}')
         CONNECTED_USERS.remove(self.id)
 
+        self.client.close()
         print('client thread ended')
 
 

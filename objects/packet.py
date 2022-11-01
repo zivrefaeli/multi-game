@@ -5,6 +5,7 @@ CLOSE_SERVER_TYPE = 'CLOSE_SERVER_TYPE'   # when clients sends Packet to server 
 SERVER_CLOSED_TYPE = 'SERVER_CLOSED_TYPE' # when server sends Packet back to clients to announce it closed
 ID_TYPE = 'ID_TYPE'
 ID_STATUS_TYPE = 'ID_STATUS_TYPE'
+DISCONNECT_TYPE = 'DISCONNECT_TYPE'
 
 
 class Packet:

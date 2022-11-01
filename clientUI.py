@@ -1,6 +1,13 @@
-from tkinter import Tk, StringVar
+from tkinter import Tk, StringVar, messagebox
 from tkinter.ttk import Button, Label, Frame, Entry
-from tkinter.constants import W
+from tkinter.constants import W, DISABLED, NORMAL
+import socket
+from threading import Thread
+from time import sleep
+
+from objects.methods import Validate, App
+from objects.packet import Packet, ID_TYPE, ID_STATUS_TYPE, ERROR_TYPE, DISCONNECT_TYPE
+from server import HandleClient
 
 
 class ClientUI(Tk):
@@ -22,10 +29,18 @@ class ClientUI(Tk):
         self.geometry(f'{self.WIDTH}x{self.HEIGHT}')
         self.resizable(False, False)
         self.iconbitmap(default='./assets/icon.ico')
+        
+        # TODO: TEMP
+        self.protocol('WM_DELETE_WINDOW', self.close)
 
         self.set_titles()
         self.set_entries()
         self.set_join_button()
+
+    # TEMP method
+    def close(self) -> None:
+        self.destroy()
+        self.connection.disconnect()
 
     def set_titles(self) -> None:
         title_label = Label(self, text='Multi:Game', font=self.TITLE_FONT)
@@ -60,10 +75,98 @@ class ClientUI(Tk):
         id_entry.grid(row=1, column=1)
 
     def set_join_button(self) -> None:
-        func = lambda: print(self.ip.get(), self.port.get(), self.id.get())
+        self.join_button = Button(self, text='Join Server',command=self.join_server)
+        self.join_button.pack(ipadx=12, ipady=4)
 
-        join_button = Button(self, text='Join Server',command=func)
-        join_button.pack(ipadx=12, ipady=4)
+    def validate_inputs(self) -> tuple[str, int, str]:
+        ip = self.ip.get()
+        port = self.port.get()
+        id = self.id.get()
+
+        result = Validate.ip(ip)
+        if not result[Validate.VALID]:
+            messagebox.showwarning(title='IP validation', message=result[Validate.MESSAGE])
+            return None
+
+        result = Validate.port(port)
+        if not result[Validate.VALID]:
+            messagebox.showwarning(title='Port validation', message=result[Validate.MESSAGE])
+            return None
+
+        result = Validate.id(id)
+        if not result[Validate.VALID]:
+            messagebox.showwarning(title='Id validation', message=result[Validate.MESSAGE])
+            return None
+
+        return ip, int(port), id
+
+    def join_server(self) -> None:
+        result = self.validate_inputs()
+        if not result:
+            return
+        self.join_button.config(state=DISABLED)
+        self.connection = ClientConnection(result, self.join_button)
+        self.connection.start()
+
+
+class ClientConnection(Thread):
+    def __init__(self, result: tuple[str, int, str], button: Button) -> None:
+        super().__init__()
+        self.ip, self.port, self.id = result
+        self.button = button
+
+        self.client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.running = True
+
+    def run(self) -> None:
+        try:
+            self.client.connect((self.ip, self.port))
+        except Exception as e:
+            self.on_error('Connectivity  Error', str(e))
+            return
+        
+        App.send(self.client, Packet(ID_TYPE, self.id))
+        response = App.receive(self.client)
+        
+        if response.type != ID_STATUS_TYPE:
+            self.on_error(response.type, 'An error occurred')
+            return
+        
+        status = response.data
+        if status == HandleClient.INVALID:
+            self.on_error('Invalid Id', 'This id already exists on the server')
+            return
+
+        self.loop()
+
+    def loop(self) -> None:
+        count = 0
+        
+        while self.running:
+            count += 1
+
+            App.send(self.client, Packet('DATA', {'id': self.id, 'value': count}))
+            packet = App.receive(self.client)
+            if packet.type == ERROR_TYPE:
+                print('error occured on receive data')
+                break
+            print(f'DATABASE: {packet.data}')
+
+            sleep(1)
+
+        # TODO: TEMP
+        if self.running:
+            self.disconnect()
+        self.client.close()
+
+    def on_error(self, title: str, message: str) -> None:
+        messagebox.showerror(title=title, message=message)
+        self.client.close()
+        self.button.config(state=NORMAL)
+
+    def disconnect(self) -> None:
+        self.running = False
+        App.send(self.client, Packet(DISCONNECT_TYPE))
 
 
 def main() -> None:
