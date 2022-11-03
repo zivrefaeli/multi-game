@@ -26,6 +26,9 @@ class Dot:
     def get(self) -> tuple:
         return self.x, self.y
 
+    def set(self, dot: tuple) -> None:
+        self.x, self.y = dot
+
     def convert(self) -> tuple:
         """converts the dot from cordinate system where (0, 0) is the origin, to pygame's cordinate system"""
         x = WIDTH / 2 + self.x

@@ -3,11 +3,19 @@ from tkinter.ttk import Button, Label, Frame, Entry
 from tkinter.constants import W, DISABLED, NORMAL
 import socket
 from threading import Thread
-from time import sleep
+from os import system
 
 from objects.methods import Validate, App
-from objects.packet import Packet, ID_TYPE, ID_STATUS_TYPE, ERROR_TYPE, DISCONNECT_TYPE
+from objects.packet import *
 from server import HandleClient
+
+import pygame
+from objects.constants import WIDTH, HEIGHT, WHITE, CLIENT_DATA
+from objects.player import Player
+
+IP = "10.100.102.45"
+PORT = "1234"
+ID = "ziv"
 
 
 class ClientUI(Tk):
@@ -19,10 +27,15 @@ class ClientUI(Tk):
 
     def __init__(self) -> None:
         super().__init__()
+        self.verified = False
 
         self.ip = StringVar()
         self.port = StringVar()
         self.id = StringVar()
+
+        self.ip.set(IP)
+        self.port.set(PORT)
+        self.id.set(ID)
 
         # UI settings
         self.title('Join Server')
@@ -30,17 +43,9 @@ class ClientUI(Tk):
         self.resizable(False, False)
         self.iconbitmap(default='./assets/icon.ico')
         
-        # TODO: TEMP
-        self.protocol('WM_DELETE_WINDOW', self.close)
-
         self.set_titles()
         self.set_entries()
         self.set_join_button()
-
-    # TEMP method
-    def close(self) -> None:
-        self.destroy()
-        self.connection.disconnect()
 
     def set_titles(self) -> None:
         title_label = Label(self, text='Multi:Game', font=self.TITLE_FONT)
@@ -104,19 +109,28 @@ class ClientUI(Tk):
         result = self.validate_inputs()
         if not result:
             return
-        self.join_button.config(state=DISABLED)
-        self.connection = ClientConnection(result, self.join_button)
-        self.connection.start()
-
-
-class ClientConnection(Thread):
-    def __init__(self, result: tuple[str, int, str], button: Button) -> None:
-        super().__init__()
-        self.ip, self.port, self.id = result
-        self.button = button
-
+        
         self.client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.running = True
+        self.join_button.config(state=DISABLED)
+        
+        verify_conn = VerifyConnection(self.client, result, self)
+        verify_conn.start()
+        self.monitor(verify_conn)
+
+    def monitor(self, thread: Thread) -> None:
+        if thread.is_alive():
+            self.after(200, lambda: self.monitor(thread))
+        else:
+            if self.verified:
+                self.destroy()
+
+
+class VerifyConnection(Thread):
+    def __init__(self, client: socket.socket, result: tuple[str, int, str], ui: ClientUI) -> None:
+        super().__init__()
+        self.client = client
+        self.ip, self.port, self.id = result
+        self.ui = ui
 
     def run(self) -> None:
         try:
@@ -137,42 +151,95 @@ class ClientConnection(Thread):
             self.on_error('Invalid Id', 'This id already exists on the server')
             return
 
-        self.loop()
-
-    def loop(self) -> None:
-        count = 0
-        
-        while self.running:
-            count += 1
-
-            App.send(self.client, Packet('DATA', {'id': self.id, 'value': count}))
-            packet = App.receive(self.client)
-            if packet.type == ERROR_TYPE:
-                print('error occured on receive data')
-                break
-            print(f'DATABASE: {packet.data}')
-
-            sleep(1)
-
-        # TODO: TEMP
-        if self.running:
-            self.disconnect()
-        self.client.close()
+        self.ui.verified = True
 
     def on_error(self, title: str, message: str) -> None:
         messagebox.showerror(title=title, message=message)
+        self.ui.join_button.config(state=NORMAL)
         self.client.close()
-        self.button.config(state=NORMAL)
 
-    def disconnect(self) -> None:
-        self.running = False
-        App.send(self.client, Packet(DISCONNECT_TYPE))
+
+class ClientConnection(Thread):
+    def __init__(self, client: socket.socket, id: str) -> None:
+        super().__init__()
+        self.client = client
+        self.id = id
+
+        self.running = True
+        self.player = Player(id)
+        self.database = {}
+
+        self.packet = Packet(f'{id}_{CLIENT_DATA}', self.player.json())
+
+    def run(self) -> None:
+        while self.running:
+            # updates client data
+            self.packet.data = self.player.json()
+
+            App.send(self.client, self.packet)
+            received_packet = App.receive(self.client)
+            
+            if received_packet.type == ERROR_TYPE:
+                print('error occured on receive data')
+                break
+            if received_packet.type == SERVER_CLOSED_TYPE:
+                print('server closed')
+                break
+
+            self.database = received_packet.data
+            system('cls')
+            print(f'Database: {self.database}')
+
+        try:
+            if not self.running:
+                App.send(self.client, Packet(DISCONNECT_TYPE))
+                print('left the server')
+        except Exception as e:
+            print(e)
+        finally:
+            self.running = False
+            self.client.close()
 
 
 def main() -> None:
     client_ui = ClientUI()
     client_ui.mainloop()
+    if not client_ui.verified:
+        return
 
+    connection = ClientConnection(client_ui.client, client_ui.id.get())
+    connection.start()
+
+    pygame.init()
+
+    window = pygame.display.set_mode((WIDTH, HEIGHT))
+    player = connection.player
+
+    while connection.running:
+        window.fill(WHITE)
+
+        x, y = pygame.mouse.get_pos()
+        x -= WIDTH / 2
+        y = HEIGHT / 2 - y
+        player.position.set((x, y))
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                connection.running = False
+                break
+                
+        for clone_id in connection.database:
+            if clone_id == connection.id:
+                continue
+            clone_json = connection.database[clone_id]
+            clone_player = Player(clone_json['id'], clone_json['position'], clone_json['color'])
+            clone_player.display(window)
+
+        player.display(window)
+
+        pygame.display.update()
+
+    pygame.quit()
 
 if __name__ == '__main__':
     main()

@@ -5,13 +5,14 @@ from .dot import Dot
 from .methods import Methods
 
 class Player:
-    def __init__(self, id: str = 'Player') -> None:
+    def __init__(self, id: str = 'Player', position: Dot = Dot(), color: tuple = Methods.random_color()) -> None:
         self.id = id
-        self.position = Dot()
+        self.position = position
+        self.color = color
         self.body = Surface((PLAYER_SIZE, PLAYER_SIZE))
 
         # player look
-        self.body.fill(Methods.random_color())
+        self.body.fill(self.color)
 
     def display(self, surface: Surface) -> None:
         rect = self.body.get_rect(center=self.position.convert())
@@ -24,6 +25,13 @@ class Player:
 
         surface.blit(self.body, rect)
         surface.blit(text, text_rect)
+
+    def json(self) -> dict:
+        return {
+            'id': self.id,
+            'position': self.position,
+            'color': self.color
+        }
 
 
 if __name__ == '__main__':

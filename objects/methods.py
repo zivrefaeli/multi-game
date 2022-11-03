@@ -38,19 +38,20 @@ class App:
 
     @staticmethod
     def send(socket: socket, packet: Packet) -> None:
-        socket.send(dumps(packet))
+        try:
+            socket.send(dumps(packet))
+        except Exception as e:
+            print(f'Exception: {e} ({type(e).__name__})')
 
     @staticmethod
     def receive(socket: socket) -> Packet:
         try:
             message = b''
-        
             while True:
                 data = socket.recv(App.BUFFER)
                 message += data
                 if len(data) < App.BUFFER:
                     break
-
             return loads(message)
         except Exception as e:
             print(f'Exception: {e} ({type(e).__name__})')

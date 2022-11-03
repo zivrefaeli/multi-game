@@ -4,7 +4,8 @@ SOURCE_FILE = 'source file'
 
 # Player Constants
 PLAYER_SIZE = 50 #px
-ID_DELTA = 40
+ID_DELTA = 40 #px
+CLIENT_DATA = 'DATA'
 
 # Window Constants
 WIDTH, HEIGHT = 500, 500 #px

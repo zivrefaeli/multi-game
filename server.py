@@ -95,7 +95,6 @@ class ServerUI(Tk):
         super().__init__()
         # variables
         self.address = address
-
         self.open_server()
 
         # UI settings
@@ -110,10 +109,10 @@ class ServerUI(Tk):
 
     def close(self):
         self.destroy()
-        if self.running:
-            self.running = False
-            close_server = CloseSeverClient(self.address)
-            close_server.start()
+        self.running = False
+        
+        close_server = CloseSeverClient(self.address)
+        close_server.start()
 
     def open_server(self) -> None:
         self.server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -121,7 +120,6 @@ class ServerUI(Tk):
         self.server.listen(self.USERS_CAPACITY)
 
         self.running = True
-
         self.server_thread = Thread(target=self.listen_for_users)
         self.server_thread.start()
 
@@ -133,9 +131,11 @@ class ServerUI(Tk):
             init_packet = App.receive(client)
 
             if init_packet.type == CLOSE_SERVER_TYPE:
-                self.running = False
                 App.send(client, Packet(SERVER_CLOSED_TYPE))
                 print('server closed by CloseSeverClient')
+
+                # for all open threads send closed server !
+
             elif init_packet.type == ID_TYPE:
                 client_id = init_packet.data
                 client_thread = HandleClient(client, client_address, client_id, self)
@@ -223,13 +223,18 @@ class HandleClient(Thread):
             if packet.type == DISCONNECT_TYPE:
                 print(f'{self.id} disconnected from the server')
                 break
-
+            
+            if not self.server_ui.running:
+                break
             DATABASE[self.id] = packet.data
             App.send(self.client, Packet('DATABASE', DATABASE))
 
         # remove client from server's data
         print(f'deleting {self.id} data: {DATABASE.pop(self.id)}')
         CONNECTED_USERS.remove(self.id)
+
+        if not self.server_ui.running:
+            App.send(self.client, Packet(SERVER_CLOSED_TYPE))
 
         self.client.close()
         print('client thread ended')
