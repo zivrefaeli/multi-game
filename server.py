@@ -1,12 +1,14 @@
 from tkinter import Tk, StringVar, messagebox, Text
 from tkinter.ttk import Label, Entry, Frame, Button, Scrollbar
-from tkinter.constants import RIGHT, BOTTOM, HORIZONTAL, VERTICAL, Y, X, NONE, NORMAL, INSERT
+from tkinter.constants import RIGHT, BOTTOM, HORIZONTAL, VERTICAL, Y, X, NONE, NORMAL,DISABLED, INSERT, END
 import socket
 from socket import gethostbyname, gethostname
 from threading import Thread
+from time import sleep
 
 from objects.methods import App, Validate
 from objects.packet import *
+from objects.constants import JSON_POS, JSON_ANGLE
 
 # when client joins the server, he should send is ID
 # the server should check if the ID exists, and send a response
@@ -46,13 +48,13 @@ class CreateServerUI(Tk):
 
         sub_title_label = Label(self, text='Run a server on your machine', font=self.LABEL_FONT)
         sub_title_label.pack()
-        
+
         ip_frame = Frame(self)
         ip_frame.pack()
 
         ip_title_label = Label(ip_frame, text='Your machine IP address is', font=self.LABEL_FONT)
         ip_title_label.grid(row=0, column=0)
-        
+
         ip_label = Label(ip_frame, text=self.IP, font=self.IP_FONT, background='lightblue')
         ip_label.grid(row=0, column=1)
 
@@ -72,16 +74,16 @@ class CreateServerUI(Tk):
 
     def create_server(self) -> None:
         result = Validate.port(self.port.get())
-        
+
         if result[Validate.VALID]:
             HOST, PORT = self.IP, int(self.port.get())
             print(f'creating server on {HOST}:{PORT}')
-            
+
             self.address = (HOST, PORT)
             self.destroy()
         else:
             messagebox.showwarning(title='Port validation', message=result[Validate.MESSAGE])
-        
+
 
 class ServerUI(Tk):
     WIDTH = 400
@@ -95,7 +97,6 @@ class ServerUI(Tk):
         super().__init__()
         # variables
         self.address = address
-        self.open_server()
 
         # UI settings
         self.title('Multi:Game Server')
@@ -106,13 +107,38 @@ class ServerUI(Tk):
 
         self.set_title()
         self.set_users_frame()
+        self.open_server()
 
     def close(self):
         self.destroy()
         self.running = False
-        
+
         close_server = CloseSeverClient(self.address)
         close_server.start()
+
+    def set_title(self) -> None:
+        title_label = Label(self, text=f'The Server Is Running', font=self.TITLE_FONT)
+        title_label.pack(pady=(30, 10))
+
+        address_label = Label(self, text=f'{self.address[0]}:{self.address[1]}', font=self.IP_FONT, background='lightblue')
+        address_label.pack()
+
+    def set_users_frame(self) -> None:
+        users_frame = Frame(self)
+        users_frame.pack(padx=10, pady=10)
+
+        scroll_vertical = Scrollbar(users_frame, orient=VERTICAL)
+        scroll_vertical.pack(side=RIGHT, fill=Y)
+        scroll_horizontal = Scrollbar(users_frame, orient=HORIZONTAL)
+        scroll_horizontal.pack(side=BOTTOM, fill=X)
+
+        self.textarea = Text(users_frame, state=DISABLED, wrap=NONE)
+        self.textarea.pack()
+
+        scroll_vertical.config(command=self.textarea.yview)
+        scroll_horizontal.config(command=self.textarea.xview)
+        self.textarea.configure(yscrollcommand=scroll_vertical.set)
+        self.textarea.configure(xscrollcommand=scroll_horizontal.set)
 
     def open_server(self) -> None:
         self.server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -120,8 +146,11 @@ class ServerUI(Tk):
         self.server.listen(self.USERS_CAPACITY)
 
         self.running = True
-        self.server_thread = Thread(target=self.listen_for_users)
-        self.server_thread.start()
+        server_thread = Thread(target=self.listen_for_users)
+        server_thread.start()
+
+        ui_thread = UpdateUI(self)
+        ui_thread.start()
 
     def listen_for_users(self):
         while self.running:
@@ -147,29 +176,35 @@ class ServerUI(Tk):
         self.server.close()
         print('server closed')
 
-    def set_title(self) -> None:
-        title_label = Label(self, text=f'The Server Is Running', font=self.TITLE_FONT)
-        title_label.pack(pady=(30, 10))
+    def update_textarea(self) -> None:
+        self.textarea.config(state=NORMAL)
+        self.textarea.delete('1.0', END)
 
-        address_label = Label(self, text=f'{self.address[0]}:{self.address[1]}', font=self.IP_FONT, background='lightblue')
-        address_label.pack()
+        text = []
+        for user in CONNECTED_USERS:
+            if not user in DATABASE:
+                continue
+            user_data = DATABASE[user]
+            text.append(f'{user}: {{')
+            text.append(f'    position: {user_data[JSON_POS]},')
+            text.append(f'    angle: {user_data[JSON_ANGLE]}')
+            text.append('}\n')
 
-    def set_users_frame(self) -> None:
-        users_frame = Frame(self)
-        users_frame.pack(padx=10, pady=10)
+        self.textarea.insert(INSERT, '\n'.join(text))
+        self.textarea.config(state=DISABLED)
 
-        scroll_vertical = Scrollbar(users_frame, orient=VERTICAL)
-        scroll_vertical.pack(side=RIGHT, fill=Y)
-        scroll_horizontal = Scrollbar(users_frame, orient=HORIZONTAL)
-        scroll_horizontal.pack(side=BOTTOM, fill=X)
-        
-        self.textarea = Text(users_frame, state=NORMAL, wrap=NONE)
-        self.textarea.pack()
 
-        scroll_vertical.config(command=self.textarea.yview)
-        scroll_horizontal.config(command=self.textarea.xview)
-        self.textarea.configure(yscrollcommand=scroll_vertical.set)
-        self.textarea.configure(xscrollcommand=scroll_horizontal.set)
+class UpdateUI(Thread):
+    DELAY = 0.3
+
+    def __init__(self, ui: ServerUI):
+        super().__init__()
+        self.ui = ui
+
+    def run(self) -> None:
+        while self.ui.running:
+            self.ui.update_textarea()
+            sleep(self.DELAY)
 
 
 class CloseSeverClient(Thread):
@@ -210,11 +245,8 @@ class HandleClient(Thread):
             print('client joined with invalid id')
             self.client.close()
             return
-        
-        CONNECTED_USERS.add(self.id)
 
-        # TODO: edit server textarea view
-        self.server_ui.textarea.insert(INSERT, f'{self.id}\n')
+        CONNECTED_USERS.add(self.id)
 
         while self.server_ui.running:
             packet = App.receive(self.client)
@@ -223,9 +255,10 @@ class HandleClient(Thread):
             if packet.type == DISCONNECT_TYPE:
                 print(f'{self.id} disconnected from the server')
                 break
-            
+
             if not self.server_ui.running:
                 break
+
             DATABASE[self.id] = packet.data
             App.send(self.client, Packet('DATABASE', DATABASE))
 
