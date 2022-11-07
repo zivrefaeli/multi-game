@@ -15,10 +15,6 @@ from objects.constants import WIDTH, HEIGHT, WHITE, CLIENT_DATA, FPS
 from objects.player import Player
 from objects.clone import Clone
 
-IP = "10.100.102.45"
-PORT = "1234"
-ID = "ziv"
-
 
 class ClientUI(Tk):
     WIDTH = 350
@@ -34,10 +30,6 @@ class ClientUI(Tk):
         self.ip = StringVar()
         self.port = StringVar()
         self.id = StringVar()
-
-        self.ip.set(IP)
-        self.port.set(PORT)
-        self.id.set(ID)
 
         # UI settings
         self.title('Join Server')
