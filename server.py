@@ -190,6 +190,9 @@ class ServerUI(Tk):
             text.append(f'    angle: {user_data[JSON_ANGLE]}')
             text.append('}\n')
 
+        if len(text) == 0:
+            text.append('There are no connected users')
+
         self.textarea.insert(INSERT, '\n'.join(text))
         self.textarea.config(state=DISABLED)
 

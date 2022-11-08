@@ -1,4 +1,5 @@
 import pygame
+from pygame import time
 from objects.constants import WIDTH, HEIGHT, WHITE
 from objects.player import Player
 
@@ -9,15 +10,10 @@ def main():
     window = pygame.display.set_mode((WIDTH, HEIGHT))
 
     p1 = Player('p1')
-    p2 = Player('p2')
-    p3 = Player('p3')
-
-    p1.position.x += 100
-    p2.position.y -= 50
-    p3.position.x -= 35
-    p3.position.y += 105
+    clock = time.Clock()
 
     while run:
+        clock.tick(60)
         window.fill(WHITE)
 
         for event in pygame.event.get():
@@ -25,10 +21,12 @@ def main():
                 run = False
                 break
 
+            elif event.type == pygame.MOUSEBUTTONDOWN:
+                if event.button == 1:
+                    p1.shoot()
+
         p1.display(window)
-        p2.display(window)
-        p3.display(window)
-        
+
         pygame.display.update()
 
     pygame.quit()

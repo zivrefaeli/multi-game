@@ -3,11 +3,6 @@ ROUND_NUMBERS = 2
 SOURCE_FILE = 'source file'
 
 # Player Constants
-PLAYER_SIZE = 50 #px
-PLAYER_DEFAULT_SPEED = .5
-ID_DELTA = 40 #px
-CLIENT_DATA = 'DATA'
-
 JSON_ID = 'id'
 JSON_POS = 'position'
 JSON_COLOR = 'color'

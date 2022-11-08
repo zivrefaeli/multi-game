@@ -11,7 +11,7 @@ from server import HandleClient
 
 import pygame
 from pygame import display, time, mouse, event
-from objects.constants import WIDTH, HEIGHT, WHITE, CLIENT_DATA, FPS
+from objects.constants import WIDTH, HEIGHT, WHITE, FPS
 from objects.player import Player
 from objects.clone import Clone
 
@@ -154,6 +154,8 @@ class VerifyConnection(Thread):
 
 
 class ClientConnection(Thread):
+    DATA = 'DATA'
+
     def __init__(self, client: socket.socket, id: str) -> None:
         super().__init__()
         self.client = client
@@ -163,7 +165,7 @@ class ClientConnection(Thread):
         self.player = Player(id)
         self.database = {}
 
-        self.packet = Packet(f'{id}_{CLIENT_DATA}', self.player.json())
+        self.packet = Packet(f'{id}_{self.DATA}', self.player.json())
 
     def run(self) -> None:
         while self.running:
@@ -183,6 +185,7 @@ class ClientConnection(Thread):
             self.database = received_packet.data
             system('cls')
             print(f'Database: {self.database}')
+            print(f'Ammo: {self.player.ammo}')
 
         try:
             if not self.running:
@@ -221,9 +224,6 @@ def main() -> None:
         window.fill(WHITE)
 
         mx, my = mouse.get_pos()
-        # x -= WIDTH / 2
-        # y = HEIGHT / 2 - y
-        # player.position.set((x, y))
 
         for e in event.get():
             if e.type == pygame.QUIT:
@@ -244,7 +244,20 @@ def main() -> None:
                 
                 elif e.key == pygame.K_LSHIFT:
                     player.crouching = False
-                
+
+            elif e.type == pygame.MOUSEBUTTONDOWN:
+                if e.button == 1:
+                    player.shooting = True
+                elif e.button == 3:
+                    player.shoot()
+            
+            elif e.type == pygame.MOUSEBUTTONUP:
+                if e.button == 1:
+                    player.shooting = False
+        
+        if player.shooting:
+            player.shoot()
+
         for clone_id in connection.database:
             if clone_id == connection.id:
                 continue
