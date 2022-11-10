@@ -4,7 +4,6 @@ from tkinter.constants import RIGHT, BOTTOM, HORIZONTAL, VERTICAL, Y, X, NONE, N
 import socket
 from socket import gethostbyname, gethostname
 from threading import Thread
-from time import sleep
 
 from objects.methods import App, Validate
 from objects.packet import *
@@ -86,16 +85,17 @@ class CreateServerUI(Tk):
 
 
 class ServerUI(Tk):
-    WIDTH = 400
-    HEIGHT = 400
+    WIDTH = 400 # px
+    HEIGHT = 400 # px
     TITLE_FONT = ('Times', 20)
     LABEL_FONT = ('Calibri', 11)
     IP_FONT = ('Consolas', 11, 'bold')
     USERS_CAPACITY = 10
+    UI_DELAY = 300 # ms
 
     def __init__(self, address: tuple[str, int]) -> None:
         super().__init__()
-        # variables
+        self.running = True
         self.address = address
 
         # UI settings
@@ -107,14 +107,13 @@ class ServerUI(Tk):
 
         self.set_title()
         self.set_users_frame()
+
         self.open_server()
 
     def close(self):
-        self.destroy()
         self.running = False
-
-        close_server = CloseSeverClient(self.address)
-        close_server.start()
+        self.listener.stop()        
+        self.destroy()
 
     def set_title(self) -> None:
         title_label = Label(self, text=f'The Server Is Running', font=self.TITLE_FONT)
@@ -140,42 +139,6 @@ class ServerUI(Tk):
         self.textarea.configure(yscrollcommand=scroll_vertical.set)
         self.textarea.configure(xscrollcommand=scroll_horizontal.set)
 
-    def open_server(self) -> None:
-        self.server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.server.bind(self.address)
-        self.server.listen(self.USERS_CAPACITY)
-
-        self.running = True
-        server_thread = Thread(target=self.listen_for_users)
-        server_thread.start()
-
-        ui_thread = UpdateUI(self)
-        ui_thread.start()
-
-    def listen_for_users(self):
-        while self.running:
-            client, client_address = self.server.accept()
-            print('client conected from', client_address)
-
-            init_packet = App.receive(client)
-
-            if init_packet.type == CLOSE_SERVER_TYPE:
-                App.send(client, Packet(SERVER_CLOSED_TYPE))
-                print('server closed by CloseSeverClient')
-
-                # for all open threads send closed server !
-
-            elif init_packet.type == ID_TYPE:
-                client_id = init_packet.data
-                client_thread = HandleClient(client, client_address, client_id, self)
-                client_thread.start()
-                print('client thread started')
-            else:
-                print('client error')
-
-        self.server.close()
-        print('server closed')
-
     def update_textarea(self) -> None:
         self.textarea.config(state=NORMAL)
         self.textarea.delete('1.0', END)
@@ -196,36 +159,67 @@ class ServerUI(Tk):
         self.textarea.insert(INSERT, '\n'.join(text))
         self.textarea.config(state=DISABLED)
 
+    def open_server(self) -> None:
+        self.server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.server.bind(self.address)
+        self.server.listen(self.USERS_CAPACITY)
 
-class UpdateUI(Thread):
-    DELAY = 0.3
+        self.listener = ClientsListener(self)
+        self.listener.start()
 
-    def __init__(self, ui: ServerUI):
+        self.update_ui()
+
+    def update_ui(self) -> None:
+        if not self.running:
+            return
+        self.update_textarea()
+        self.after(self.UI_DELAY, self.update_ui)
+
+
+class ClientsListener(Thread):
+    def __init__(self, ui: ServerUI) -> None:
         super().__init__()
+        self.setName('Clients Listener Thread')
         self.ui = ui
+        self.threads = []
 
     def run(self) -> None:
-        while self.ui.running:
-            self.ui.update_textarea()
-            sleep(self.DELAY)
+        server = self.ui.server
 
+        while True:
+            client, client_address = server.accept()
+            print('client conected from', client_address)
 
-class CloseSeverClient(Thread):
-    def __init__(self, address: tuple[str, int]) -> None:
-        super().__init__()
-        self.address = address
+            init_packet = App.receive(client)
 
-    def run(self) -> None:
+            if init_packet.type == CLOSE_SERVER_TYPE:
+                break
+            
+            elif init_packet.type == ID_TYPE:
+                client_id = init_packet.data
+
+                client_thread = HandleClient(client, client_address, client_id)
+                client_thread.start()
+
+                self.threads.append(client_thread)
+                print('client thread started')
+            else:
+                print('client error')
+
+        for thread in self.threads:
+            if thread.is_alive():
+                App.send(thread.client, Packet(SERVER_CLOSED_TYPE))
+
+        server.close()
+        print('server closed')
+
+    def stop(self) -> None:
         client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         try:
-            client.connect(self.address)
-        except Exception as e:
-            if type(e) == ConnectionRefusedError:
-                print('server is closed')
-            else:
-                print(e)
-        else:
+            client.connect(self.ui.address)
             App.send(client, Packet(CLOSE_SERVER_TYPE))
+        except Exception as e:
+            print(e)
         finally:
             client.close()
 
@@ -234,43 +228,41 @@ class HandleClient(Thread):
     VALID = 'valid'
     INVALID = 'invalid'
 
-    def __init__(self, client: socket.socket, address: tuple[str, int], id: str, server_ui: ServerUI) -> None:
+    def __init__(self, client: socket.socket, address: tuple[str, int], id: str) -> None:
         super().__init__()
+        self.setName(f'{id}`s thread')
         self.client = client
         self.address = address
         self.id = id
-        self.server_ui = server_ui
 
     def run(self) -> None:
         status = self.INVALID if self.id in CONNECTED_USERS else self.VALID 
         App.send(self.client, Packet(ID_STATUS_TYPE, status))
+
         if status == self.INVALID:
             print('client joined with invalid id')
             self.client.close()
             return
-
         CONNECTED_USERS.add(self.id)
 
-        while self.server_ui.running:
+        while True:
             packet = App.receive(self.client)
-            if packet.type == ERROR_TYPE:
-                break
-            if packet.type == DISCONNECT_TYPE:
-                print(f'{self.id} disconnected from the server')
-                break
 
-            if not self.server_ui.running:
+            if packet.type == ERROR_TYPE:
+                break # no response
+            if packet.type == DISCONNECT_TYPE: # no response
+                print(f'{self.id} disconnected from the server')
+                break # no response
+            if packet.type == SERVER_CLOSED_TYPE:
+                print(f'[{self.id}]: server closed - dissconnecting!')
+                App.send(self.client, Packet(SERVER_CLOSED_TYPE))
                 break
 
             DATABASE[self.id] = packet.data
             App.send(self.client, Packet('DATABASE', DATABASE))
 
-        # remove client from server's data
         print(f'deleting {self.id} data: {DATABASE.pop(self.id)}')
         CONNECTED_USERS.remove(self.id)
-
-        if not self.server_ui.running:
-            App.send(self.client, Packet(SERVER_CLOSED_TYPE))
 
         self.client.close()
         print('client thread ended')

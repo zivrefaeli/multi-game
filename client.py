@@ -17,8 +17,8 @@ from objects.clone import Clone
 
 
 class ClientUI(Tk):
-    WIDTH = 350
-    HEIGHT = 350
+    WIDTH = 350 # px
+    HEIGHT = 350 # px
     TITLE_FONT = ('Times', 20)
     LABEL_FONT = ('Calibri', 11)
     ENTRY_FONT = ('Consolas', 11)
@@ -107,21 +107,21 @@ class ClientUI(Tk):
         self.client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.join_button.config(state=DISABLED)
         
-        verify_conn = VerifyConnection(self.client, result, self)
-        verify_conn.start()
-        self.monitor(verify_conn)
+        self.verify_conn = VerifyConnection(self.client, result, self)
+        self.verify_conn.start()
+        self.monitor()
 
-    def monitor(self, thread: Thread) -> None:
-        if thread.is_alive():
-            self.after(200, lambda: self.monitor(thread))
-        else:
-            if self.verified:
-                self.destroy()
+    def monitor(self) -> None:
+        if self.verify_conn.is_alive():
+            self.after(500, self.monitor)
+        elif self.verified:
+            self.destroy()
 
 
 class VerifyConnection(Thread):
     def __init__(self, client: socket.socket, result: tuple[str, int, str], ui: ClientUI) -> None:
         super().__init__()
+        self.setName('Verify Connection Thread')
         self.client = client
         self.ip, self.port, self.id = result
         self.ui = ui
@@ -130,7 +130,7 @@ class VerifyConnection(Thread):
         try:
             self.client.connect((self.ip, self.port))
         except Exception as e:
-            self.on_error('Connectivity  Error', str(e))
+            self.on_error('Connectivity Error', str(e))
             return
         
         App.send(self.client, Packet(ID_TYPE, self.id))
@@ -158,6 +158,7 @@ class ClientConnection(Thread):
 
     def __init__(self, client: socket.socket, id: str) -> None:
         super().__init__()
+        self.setName(f'{id}`s Connection Thread')
         self.client = client
         self.id = id
 
@@ -188,7 +189,7 @@ class ClientConnection(Thread):
             print(f'Ammo: {self.player.ammo}')
 
         try:
-            if not self.running:
+            if not self.running: # client left from pygame
                 App.send(self.client, Packet(DISCONNECT_TYPE))
                 print('left the server')
         except Exception as e:
