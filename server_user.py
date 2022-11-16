@@ -4,16 +4,22 @@ from tkinter.constants import RIGHT, BOTTOM, HORIZONTAL, VERTICAL, Y, X, NONE, N
 import socket
 from socket import gethostbyname, gethostname
 from threading import Thread
+from math import sqrt, degrees, radians, cos, sin, atan, floor
 
 from objects.methods import App, Validate
 from objects.packet import *
-from objects.constants import JSON_POS, JSON_ANGLE
+from objects.constants import Data
+from objects.dot import Dot
+from objects.player import Player
+from objects.clone import Clone
 
 # when client joins the server, he should send is ID
 # the server should check if the ID exists, and send a response
 
 CONNECTED_USERS = set() # list of conncted users' ids
 DATABASE = dict()       # map of [id] = user data
+
+# TODO: split server.py and client.py to seperate flies
 
 
 class CreateServerUI(Tk):
@@ -149,8 +155,8 @@ class ServerUI(Tk):
                 continue
             user_data = DATABASE[user]
             text.append(f'{user}: {{')
-            text.append(f'    position: {user_data[JSON_POS]},')
-            text.append(f'    angle: {user_data[JSON_ANGLE]}')
+            text.append(f'    position: {user_data[Data.POS]},')
+            text.append(f'    angle: {user_data[Data.ANGLE]}')
             text.append('}\n')
 
         if len(text) == 0:
@@ -228,6 +234,10 @@ class HandleClient(Thread):
     VALID = 'valid'
     INVALID = 'invalid'
 
+    SERVER_DATA = 'SERVER_DATA'
+    CLIENTS = 'CLIENTS'
+    DAMAGE = 'DAMAGE'
+
     def __init__(self, client: socket.socket, address: tuple[str, int], id: str) -> None:
         super().__init__()
         self.setName(f'{id}`s thread')
@@ -250,7 +260,7 @@ class HandleClient(Thread):
 
             if packet.type == ERROR_TYPE:
                 break # no response
-            if packet.type == DISCONNECT_TYPE: # no response
+            if packet.type == DISCONNECT_TYPE:
                 print(f'{self.id} disconnected from the server')
                 break # no response
             if packet.type == SERVER_CLOSED_TYPE:
@@ -258,14 +268,56 @@ class HandleClient(Thread):
                 App.send(self.client, Packet(SERVER_CLOSED_TYPE))
                 break
 
+            # TODO: calculate how match damage this client recevied - on client side !
+            damage = self.get_attack()
+
             DATABASE[self.id] = packet.data
-            App.send(self.client, Packet('DATABASE', DATABASE))
+            App.send(self.client, Packet(self.SERVER_DATA, {
+                self.CLIENTS: DATABASE,
+                self.DAMAGE: damage
+            }))
 
         print(f'deleting {self.id} data: {DATABASE.pop(self.id)}')
         CONNECTED_USERS.remove(self.id)
 
         self.client.close()
         print('client thread ended')
+
+    def get_attack(self) -> int:
+        attack = 0
+
+        for id in DATABASE:
+            if id == self.id:
+                continue
+            clone = Clone(DATABASE[id])
+
+            i = 0
+            while i < len(clone.bullets):
+                bullet = clone.bullets[i]
+                if self.hitbox(bullet, clone.position, clone.angle):
+                    attack += 1
+                    clone.bullets.pop(i)
+                else:
+                    i += 1
+
+        return attack
+
+    def hitbox(self, bullet: Dot, clone: Dot, angle: int) -> bool:
+        # relative dot (a, b) to clone position as origin
+        a = bullet.x - clone.x
+        b = bullet.y - clone.y
+        r = sqrt(a ** 2 + b ** 2)
+
+        try:
+            alpha = degrees(atan(b / a))
+        except ZeroDivisionError:
+            alpha = 90 if b > 0 else 270
+        
+        beta = radians(alpha - angle)
+        x, y = round(r * cos(beta)), round(r * sin(beta))
+        d = Player.SIZE / 2
+
+        return -d <= x <= d and -d <= y <= d
 
 
 def main() -> None:

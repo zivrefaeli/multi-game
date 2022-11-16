@@ -2,21 +2,22 @@ from pygame import Surface, font, transform, image
 from time import sleep
 from threading import Thread
 
-from .constants import SOURCE_FILE, BLACK, JSON_ID, JSON_COLOR, JSON_ANGLE, JSON_POS
+from .constants import SOURCE_FILE, BLACK, TRANSPARENT, Data
 from .dot import Dot
 from .methods import Methods
 from .vector import Vector
 from .bullet import Bullet
 
 class Player:
-    SIZE = 50 # px
+    SIZE = 80 # px
     DIMENTIONS = (SIZE, SIZE)
     ID_DELTA = int(SIZE / 2 + 15)
     SPEED = .5 # px/frame
     MAX_AMMO = 30
     RELOAD_TIME = 1 # sec
+    FULL_HEALTH = 100
 
-    def __init__(self, id: str = 'Player', clone: bool = False) -> None:
+    def __init__(self, id: str = 'Player') -> None:
         self.id = id
 
         self.position = Dot()
@@ -34,10 +35,9 @@ class Player:
         self.ammo = self.MAX_AMMO
 
         self.color = Methods.random_color()
-        self.body = Surface(self.DIMENTIONS).convert_alpha()
+        self.health = self.FULL_HEALTH
 
-        if not clone:
-            self.set_look()
+        self.set_icon()
 
     @property
     def angle(self) -> int:
@@ -46,13 +46,14 @@ class Player:
     @angle.setter
     def angle(self, value: int) -> None:
         self._angle = (value + 360) % 360
-    
-    def set_look(self) -> None:
-        self.body.fill(self.color)
 
+    def set_icon(self) -> None:
         skin = image.load('./assets/player.png')
-        scaled_skin = transform.scale(skin, self.DIMENTIONS)
-        self.body.blit(scaled_skin, (0, 0))
+        self.scaled_skin = transform.scale(skin, self.DIMENTIONS)
+
+        self.icon = Surface(self.DIMENTIONS)
+        self.icon.fill(self.color)
+        self.icon.blit(self.scaled_skin, (0, 0))
 
     def rotate_to(self, dot: tuple) -> None:
         x, y = self.position.convert()
@@ -88,11 +89,20 @@ class Player:
     def display(self, surface: Surface) -> None:
         self.update()
 
-        rotated_body = transform.rotate(self.body, self.angle)
-        body_rect = rotated_body.get_rect(center=self.position.convert())
-
         self.display_bullets(surface)
         self.display_id(surface)
+        self.display_body(surface)
+
+    def display_body(self, surface: Surface) -> None:
+        body = Surface(self.DIMENTIONS).convert_alpha()
+        body.fill(TRANSPARENT)
+
+        body_fill = Surface((int(self.DIMENTIONS[0] * self.health / 100), self.DIMENTIONS[1]))
+        body.blit(body_fill, body_fill.fill(self.color))
+        body.blit(self.scaled_skin, (0, 0))
+
+        rotated_body = transform.rotate(body, self.angle)
+        body_rect = rotated_body.get_rect(center=self.position.convert())
         surface.blit(rotated_body, body_rect)
 
     def display_id(self, surface: Surface) -> None:
@@ -136,10 +146,12 @@ class Player:
 
     def json(self) -> dict:
         return {
-            JSON_ID: self.id,
-            JSON_POS: self.position,
-            JSON_COLOR: self.color,
-            JSON_ANGLE: self.angle
+            Data.ID: self.id,
+            Data.POS: self.position,
+            Data.COLOR: self.color,
+            Data.ANGLE: self.angle,
+            Data.HEALTH: self.health,
+            Data.BULLETS: [bullet.position for bullet in self.bullets]
         }
 
     def __str__(self) -> str:

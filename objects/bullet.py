@@ -7,7 +7,7 @@ from .vector import Vector
 
 class Bullet:
     SPEED = 4
-    RADIUS = 2
+    RADIUS = 1
 
     def __init__(self, position: Dot = Dot(), angle: int = 0) -> None:
         self.position = position
@@ -19,8 +19,12 @@ class Bullet:
         self.position.x += dx
         self.position.y += dy
 
+    @staticmethod
+    def draw(position: Dot, surface: Surface) -> None:
+        draw.circle(surface, BLACK, position.convert(), Bullet.RADIUS)
+
     def display(self, surface: Surface) -> None:
-        draw.circle(surface, BLACK, self.position.convert(), self.RADIUS)
+        self.draw(self.position, surface)
 
     def in_bounds(self) -> bool:
         x, y = self.position.convert()
