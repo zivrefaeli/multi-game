@@ -181,6 +181,7 @@ class ServerUI(Tk):
         self.update_textarea()
         self.after(self.UI_DELAY, self.update_ui)
 
+# TODO: Add the Threads to ./server foder
 
 class ClientsListener(Thread):
     def __init__(self, ui: ServerUI) -> None:
