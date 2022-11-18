@@ -1,6 +1,10 @@
+import socket
 from tkinter import Tk, Text
 from tkinter.ttk import Label, Frame, Scrollbar
-from tkinter.constants import RIGHT, BOTTOM, HORIZONTAL, VERTICAL, Y, X, NONE, DISABLED
+from tkinter.constants import RIGHT, BOTTOM, HORIZONTAL, VERTICAL, Y, X, NONE, DISABLED, NORMAL, END, INSERT
+from .listener import ClientsListener
+from .data import *
+from objects import Json
 
 
 class ServerUI(Tk):
@@ -30,7 +34,7 @@ class ServerUI(Tk):
 
     def close(self):
         self.running = False
-        # self.listener.stop()        
+        self.listener.stop()
         self.destroy()
 
     def set_title(self) -> None:
@@ -58,40 +62,37 @@ class ServerUI(Tk):
         self.textarea.configure(xscrollcommand=scroll_horizontal.set)
 
     def update_textarea(self) -> None:
-        pass
-        # self.textarea.config(state=NORMAL)
-        # self.textarea.delete('1.0', END)
+        self.textarea.config(state=NORMAL)
+        self.textarea.delete('1.0', END) # clear text
 
-        # text = []
-        # for user in CONNECTED_USERS:
-        #     if not user in DATABASE:
-        #         continue
-        #     user_data = DATABASE[user]
-        #     text.append(f'{user}: {{')
-        #     text.append(f'    position: {user_data[Data.POS]},')
-        #     text.append(f'    angle: {user_data[Data.ANGLE]}')
-        #     text.append('}\n')
+        text = []
+        for user in CONNECTED_USERS:
+            if not user in DATABASE:
+                continue
+            user_data = DATABASE[user]
+            text.append(f'{user}: {{')
+            text.append(f'    position: {user_data[Json.POS]},')
+            text.append(f'    angle: {user_data[Json.ANGLE]}')
+            text.append('}\n')
 
-        # if len(text) == 0:
-        #     text.append('There are no connected users')
+        if len(text) == 0:
+            text.append('There are no connected users')
 
-        # self.textarea.insert(INSERT, '\n'.join(text))
-        # self.textarea.config(state=DISABLED)
+        self.textarea.insert(INSERT, '\n'.join(text))
+        self.textarea.config(state=DISABLED)
 
     def open_server(self) -> None:
-        pass
-        # self.server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        # self.server.bind(self.address)
-        # self.server.listen(self.USERS_CAPACITY)
+        self.server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.server.bind(self.address)
+        self.server.listen(self.USERS_CAPACITY)
 
-        # self.listener = ClientsListener(self)
-        # self.listener.start()
+        self.listener = ClientsListener(self.server)
+        self.listener.start()
 
-        # self.update_ui()
+        self.update_ui()
 
     def update_ui(self) -> None:
         if not self.running:
             return
         self.update_textarea()
         self.after(self.UI_DELAY, self.update_ui)
-
