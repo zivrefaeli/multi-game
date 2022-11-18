@@ -149,7 +149,6 @@ class Player:
             reload_thread.start()
 
     def reload(self) -> None:
-        print('reloading')
         sleep(self.RELOAD_TIME)
         self.reloading = False
         self.ammo = self.MAX_AMMO
