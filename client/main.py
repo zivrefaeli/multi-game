@@ -1,7 +1,11 @@
 import pygame
 from pygame import display, time, mouse, event
+from .ui import ClientUI
+from .connection import ClientConnection
+from objects import Json, Clone, Bullet, WIDTH, HEIGHT, FPS, WHITE
 
-def main() -> None:
+
+def cmain() -> None:
     pygame.init()
     display.set_mode((WIDTH, HEIGHT), flags=pygame.HIDDEN)
 
@@ -16,7 +20,6 @@ def main() -> None:
     
     player = connection.player
 
-    # UI settings
     display.set_caption(f'{player.id}`s screen')
     display.set_icon(player.icon)
     window = display.set_mode((WIDTH, HEIGHT), flags=pygame.SHOWN)
@@ -29,8 +32,6 @@ def main() -> None:
     while connection.running:
         clock.tick(FPS)
         window.fill(WHITE)
-
-        mx, my = mouse.get_pos()
 
         for e in event.get():
             if e.type == pygame.QUIT:
@@ -70,16 +71,13 @@ def main() -> None:
                 continue
             clone_json = connection.database[clone_id]
             clone = Clone(clone_json)
-            for position in clone_json[Data.BULLETS]:
+            for position in clone_json[Json.BULLETS]:
                 Bullet.draw(position, window)
             clone.display(window)
         
-        player.rotate_to((mx, my))
+        player.rotate_to(mouse.get_pos())
         player.display(window)
 
         display.update()
 
     pygame.quit()
-
-if __name__ == '__main__':
-    main()

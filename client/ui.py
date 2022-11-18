@@ -1,11 +1,9 @@
 import socket
-
 from tkinter import StringVar, Tk, messagebox
 from tkinter.ttk import Button, Entry, Frame, Label
 from tkinter.constants import DISABLED, NORMAL, W
-
-from objects.methods import Validate
-from .verify_connection import VerifyConnection
+from .verify import VerifyConnection
+from objects import Validate
 
 
 class ClientUI(Tk):
@@ -76,23 +74,23 @@ class ClientUI(Tk):
         result = Validate.ip(ip)
         if not result[Validate.VALID]:
             messagebox.showwarning(title='IP validation', message=result[Validate.MESSAGE])
-            return None
+            return tuple()
 
         result = Validate.port(port)
         if not result[Validate.VALID]:
             messagebox.showwarning(title='Port validation', message=result[Validate.MESSAGE])
-            return None
+            return tuple()
 
         result = Validate.id(id)
         if not result[Validate.VALID]:
             messagebox.showwarning(title='Id validation', message=result[Validate.MESSAGE])
-            return None
+            return tuple()
 
         return ip, int(port), id
 
     def join_server(self) -> None:
         result = self.validate_inputs()
-        if not result:
+        if len(result) == 0:
             return
         
         self.client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -109,5 +107,3 @@ class ClientUI(Tk):
             self.destroy()
         else:
             self.join_button.config(state=NORMAL)
-
-
