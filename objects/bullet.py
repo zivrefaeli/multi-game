@@ -1,6 +1,6 @@
-from pygame import Surface, draw
-
-from .constants import SOURCE_FILE, BLACK, WIDTH, HEIGHT
+from pygame import draw
+from pygame.surface import Surface
+from .constants import BLACK, WIDTH, HEIGHT
 from .dot import Dot
 from .vector import Vector
 
@@ -32,8 +32,3 @@ class Bullet:
 
     def __str__(self) -> str:
         return f'{self.position}, {self.angle}'
-
-
-if __name__ == '__main__':
-    filename = __file__.split('\\')[-1]
-    print(f'{filename} {SOURCE_FILE}')

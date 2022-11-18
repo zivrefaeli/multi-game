@@ -1,12 +1,22 @@
-from pygame import Surface, font, transform, image
 from time import sleep
 from threading import Thread
-
-from .constants import SOURCE_FILE, BLACK, TRANSPARENT, Data
+from pygame import font, transform, image
+from pygame.surface import Surface
+from .constants import BLACK, TRANSPARENT
 from .dot import Dot
 from .methods import Methods
 from .vector import Vector
 from .bullet import Bullet
+
+
+class Json:
+    ID = 'id'
+    POS = 'position'
+    COLOR = 'color'
+    ANGLE = 'angle'
+    HEALTH = 'health'
+    BULLETS = 'bullets'
+
 
 class Player:
     SIZE = 80 # px
@@ -146,18 +156,13 @@ class Player:
 
     def json(self) -> dict:
         return {
-            Data.ID: self.id,
-            Data.POS: self.position,
-            Data.COLOR: self.color,
-            Data.ANGLE: self.angle,
-            Data.HEALTH: self.health,
-            Data.BULLETS: [bullet.position for bullet in self.bullets]
+            Json.ID: self.id,
+            Json.POS: self.position,
+            Json.COLOR: self.color,
+            Json.ANGLE: self.angle,
+            Json.HEALTH: self.health,
+            Json.BULLETS: [bullet.position for bullet in self.bullets]
         }
 
     def __str__(self) -> str:
         return f'[{self.id}]: {{{self.position}, {self.angle}}}'
-
-
-if __name__ == '__main__':
-    filename = __file__.split('\\')[-1]
-    print(f'{filename} {SOURCE_FILE}')

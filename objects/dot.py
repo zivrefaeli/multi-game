@@ -1,6 +1,5 @@
 from math import sqrt
-
-from constants import source_file, ROUND_NUMBERS, WIDTH, HEIGHT
+from .constants import ROUND_NUMBERS, WIDTH, HEIGHT
 
 
 class Dot:
@@ -47,7 +46,3 @@ class Dot:
 
     def __str__(self) -> str:
         return f'({self.x}, {self.y})'
-
-
-if __name__ == '__main__':
-    source_file(__file__)

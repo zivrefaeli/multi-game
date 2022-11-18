@@ -1,4 +1,7 @@
 import sys
+sys.path.append('..')
+from client import cmain
+from server import smain
 
 FILE_NAME = __file__.split('\\')[-1]
 VALID_COMMANDS = ['s', 'server', 'c', 'client']
@@ -17,6 +20,8 @@ def main() -> None:
         return
 
     command = sys.argv[1].lower()
+    valid = False
+    
     for start in VALID_STARTS:
         if command.startswith(start):
             valid = command[len(start):] in VALID_COMMANDS
@@ -26,12 +31,10 @@ def main() -> None:
         print(f'{sys.argv[1]} is an invalid command')
         return
     
-    start_server = VALID_COMMANDS[0] in command
-    # TODO: temp
-    if start_server:
-        print('starting server ui')
+    if VALID_COMMANDS[0] in command:
+        smain()
     else:
-        print('starting client ui')
+        cmain()
 
 
 if __name__ == '__main__':
