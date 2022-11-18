@@ -10,7 +10,6 @@ class ClientsListener(Thread):
         self.setName('Clients Listener Thread')
         self.server = server
         self.address = self.server.getsockname()
-        print('my address is', self.address)
         self.clients_threads = []
 
     def run(self) -> None:
