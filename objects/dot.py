@@ -1,6 +1,7 @@
 from math import sqrt
 
-from .constants import SOURCE_FILE, ROUND_NUMBERS, WIDTH, HEIGHT
+from constants import source_file, ROUND_NUMBERS, WIDTH, HEIGHT
+
 
 class Dot:
     def __init__(self, x: float = 0, y: float = 0) -> None:
@@ -47,6 +48,6 @@ class Dot:
     def __str__(self) -> str:
         return f'({self.x}, {self.y})'
 
+
 if __name__ == '__main__':
-    filename = __file__.split('\\')[-1]
-    print(f'{filename} {SOURCE_FILE}')
+    source_file(__file__)
