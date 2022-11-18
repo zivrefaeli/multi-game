@@ -19,7 +19,7 @@ class Json:
 
 
 class Player:
-    SIZE = 80 # px
+    SIZE = 50 # px
     DIMENTIONS = (SIZE, SIZE)
     ID_DELTA = int(SIZE / 2 + 15)
     SPEED = .5 # px/frame

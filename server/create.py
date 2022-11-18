@@ -14,12 +14,10 @@ class CreateServerUI(Tk):
 
     def __init__(self) -> None:
         super().__init__()
-        # variables
         self.IP = gethostbyname(gethostname())
         self.port = StringVar()
         self.address = None
 
-        # UI settings
         self.title('Create Server')
         self.geometry(f'{self.WIDTH}x{self.HEIGHT}')
         self.resizable(False, False)

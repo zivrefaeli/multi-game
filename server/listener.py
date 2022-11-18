@@ -10,6 +10,7 @@ class ClientsListener(Thread):
         self.setName('Clients Listener Thread')
         self.server = server
         self.address = self.server.getsockname()
+        print('my address is', self.address)
         self.clients_threads = []
 
     def run(self) -> None:
@@ -19,7 +20,7 @@ class ClientsListener(Thread):
 
             init_packet = App.receive(client)
 
-            if init_packet.type == Type.SERVER_CLOSED:
+            if init_packet.type == Type.CLOSE_SERVER:
                 break
             
             elif init_packet.type == Type.SEND_ID:

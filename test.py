@@ -1,10 +1,6 @@
 import pygame
 from pygame import time, mouse
-from objects.constants import WIDTH, HEIGHT, WHITE
-from objects.player import Player
-from objects.health_bar import HealthBar
-from objects.dot import Dot
-from objects.methods import Methods
+from objects import *
 from math import sqrt, degrees, atan, cos, sin, radians
 
 R_MAX = sqrt(2) / 2 * Player.SIZE
