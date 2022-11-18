@@ -33,21 +33,14 @@ class ClientConnection(Thread):
                 print('server closed')
                 break
 
-            try:
-                
-                data = received_packet.data
-                self.database = data['clients']
-                damage = data['damage']
-                self.player.health += damage
-            except Exception as e:
-                pass
-
+            data = received_packet.data
+            self.database = data['CLIENTS']
+            damage = data['DAMAGE']
+            self.player.health -= damage
 
             if self.player.health <= 0:
                 self.player.health = Player.FULL_HEALTH
 
-            # system('cls')
-            # print(f'Database: {self.database}')
             print(f'Ammo: {self.player.ammo} | Damage: {damage}')
 
         try:

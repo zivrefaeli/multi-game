@@ -9,12 +9,12 @@ class VerifyConnection(Thread):
         super().__init__()
         self.setName('Verify Connection Thread')
         self.client = client
-        self.ip, self.port, self.id = result
+        *self.address, self.id = result
         self.verified = False
 
     def run(self) -> None:
         try:
-            self.client.connect((self.ip, self.port))
+            self.client.connect(tuple(self.address))
         except Exception as e:
             self.on_error('Connectivity Error', str(e))
             return
@@ -26,8 +26,7 @@ class VerifyConnection(Thread):
             self.on_error(response.type, 'An error occurred')
             return
         
-        status = response.data
-        if status == 'invalid':
+        if response.data == 'invalid':
             self.on_error('Invalid Id', 'This id already exists on the server')
             return
 

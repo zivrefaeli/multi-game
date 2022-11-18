@@ -104,6 +104,7 @@ class ClientUI(Tk):
         if self.verify_conn.is_alive():
             self.after(500, self.monitor)
         elif self.verify_conn.verified:
+            self.verified = True
             self.destroy()
         else:
             self.join_button.config(state=NORMAL)

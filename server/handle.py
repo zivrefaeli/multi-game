@@ -48,7 +48,7 @@ class HandleClient(Thread):
             DATABASE[self.id] = packet.data
             App.send(self.client, Packet(self.SERVER_DATA, {
                 self.CLIENTS: DATABASE,
-                self.DAMAGE: 1
+                self.DAMAGE: 0
             }))
 
         print(f'deleting {self.id} data: {DATABASE.pop(self.id)}')

@@ -8,7 +8,7 @@ class Type:
 
 
 class Packet:
-    def __init__(self, type: str, data: object = None) -> None:
+    def __init__(self, type: str, data = None) -> None:
         self.type = type
         self.data = data
 
