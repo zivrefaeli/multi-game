@@ -1,17 +1,13 @@
-from .constants import SOURCE_FILE, Data
-from .player import Player
+from .player import Player, Json
 
 
 class Clone(Player):
     def __init__(self, json: dict) -> None:
-        super().__init__(json[Data.ID])
-
-        self.position = json[Data.POS]
-        self.color = json[Data.COLOR]
-        self.angle = json[Data.ANGLE]
-        self.health = json[Data.HEALTH]
-        
-
-if __name__ == '__main__':
-    filename = __file__.split('\\')[-1]
-    print(f'{filename} {SOURCE_FILE}')
+        super().__init__(json[Json.ID])
+        self.update_json(json)
+    
+    def update_json(self, json: dict) -> None:
+        self.position = json[Json.POS]
+        self.color = json[Json.COLOR]
+        self.angle = json[Json.ANGLE]
+        self.health = json[Json.HEALTH]

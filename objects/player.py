@@ -1,17 +1,29 @@
-from pygame import Surface, font, transform, image
 from time import sleep
+from math import sqrt
 from threading import Thread
-
-from .constants import SOURCE_FILE, BLACK, TRANSPARENT, Data
+from pygame import font, transform, image
+from pygame.surface import Surface
+from .constants import BLACK, TRANSPARENT
 from .dot import Dot
 from .methods import Methods
 from .vector import Vector
 from .bullet import Bullet
 
+
+class Json:
+    ID = 'id'
+    POS = 'position'
+    COLOR = 'color'
+    ANGLE = 'angle'
+    HEALTH = 'health'
+    BULLETS = 'bullets'
+
+
 class Player:
-    SIZE = 80 # px
+    SIZE = 50 # px
     DIMENTIONS = (SIZE, SIZE)
     ID_DELTA = int(SIZE / 2 + 15)
+    RADIUS = sqrt(2) / 2 * SIZE
     SPEED = .5 # px/frame
     MAX_AMMO = 30
     RELOAD_TIME = 1 # sec
@@ -29,7 +41,7 @@ class Player:
         self.accelerating = False
         self.crouching = False
 
-        self.bullets = []
+        self.bullets: list[Bullet] = []
         self.shooting = False
         self.reloading = False
         self.ammo = self.MAX_AMMO
@@ -139,25 +151,38 @@ class Player:
             reload_thread.start()
 
     def reload(self) -> None:
-        print('reloading')
         sleep(self.RELOAD_TIME)
         self.reloading = False
         self.ammo = self.MAX_AMMO
 
+    def hit(self, other_pos: Dot, other_angle: int) -> int:
+        damage = 0
+        i = 0
+        d = self.SIZE / 2
+
+        while i < len(self.bullets):
+            bullet = self.bullets[i]
+            if bullet.position.distance(other_pos) > self.RADIUS:
+                i += 1
+                continue
+            
+            x, y = bullet.position.rotate(other_pos, other_angle)
+            if -d <= x <= d and -d <= y <= d:
+                damage += 1
+                self.bullets.pop(i)
+            else:
+                i += 1
+        return damage
+
     def json(self) -> dict:
         return {
-            Data.ID: self.id,
-            Data.POS: self.position,
-            Data.COLOR: self.color,
-            Data.ANGLE: self.angle,
-            Data.HEALTH: self.health,
-            Data.BULLETS: [bullet.position for bullet in self.bullets]
+            Json.ID: self.id,
+            Json.POS: self.position,
+            Json.COLOR: self.color,
+            Json.ANGLE: self.angle,
+            Json.HEALTH: self.health,
+            Json.BULLETS: [bullet.position for bullet in self.bullets]
         }
 
     def __str__(self) -> str:
         return f'[{self.id}]: {{{self.position}, {self.angle}}}'
-
-
-if __name__ == '__main__':
-    filename = __file__.split('\\')[-1]
-    print(f'{filename} {SOURCE_FILE}')

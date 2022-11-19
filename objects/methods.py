@@ -1,11 +1,8 @@
-from math import degrees, atan
-from operator import le
-from random import randint
 from socket import socket
+from math import degrees, atan
+from random import randint
 from pickle import loads, dumps
-
-from .constants import SOURCE_FILE
-from .packet import Packet, ERROR_TYPE
+from .packet import Packet, Type
 
 
 class Methods:
@@ -55,7 +52,7 @@ class App:
             return loads(message)
         except Exception as e:
             print(f'Exception: {e} ({type(e).__name__})')
-            return Packet(ERROR_TYPE)
+            return Packet(Type.ERROR)
 
 
 class Validate:
@@ -122,8 +119,3 @@ class Validate:
 
         result[Validate.VALID] = True
         return result
-
-
-if __name__ == '__main__':
-    filename = __file__.split('\\')[-1]
-    print(f'{filename} {SOURCE_FILE}')

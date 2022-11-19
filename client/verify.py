@@ -1,37 +1,32 @@
 import socket
 from threading import Thread
-
 from tkinter import messagebox
+from objects import App, Packet, Type
 
-from objects.packet import *
-from objects.methods import App
-
-from server_user import HandleClient
 
 class VerifyConnection(Thread):
     def __init__(self, client: socket.socket, result: tuple[str, int, str]) -> None:
         super().__init__()
         self.setName('Verify Connection Thread')
         self.client = client
-        self.ip, self.port, self.id = result
+        *self.address, self.id = result
         self.verified = False
 
     def run(self) -> None:
         try:
-            self.client.connect((self.ip, self.port))
+            self.client.connect(tuple(self.address))
         except Exception as e:
             self.on_error('Connectivity Error', str(e))
             return
         
-        App.send(self.client, Packet(ID_TYPE, self.id))
+        App.send(self.client, Packet(Type.SEND_ID, self.id))
         response = App.receive(self.client)
         
-        if response.type != ID_STATUS_TYPE:
+        if response.type != Type.ID_STATUS:
             self.on_error(response.type, 'An error occurred')
             return
         
-        status = response.data
-        if status == HandleClient.INVALID:
+        if response.data == 'invalid':
             self.on_error('Invalid Id', 'This id already exists on the server')
             return
 

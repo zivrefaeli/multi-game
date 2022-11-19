@@ -1,6 +1,7 @@
-from math import sqrt
+from math import sqrt, cos, sin, atan, degrees, radians, floor
+from typing_extensions import Self
+from .constants import ROUND_NUMBERS, WIDTH, HEIGHT
 
-from .constants import SOURCE_FILE, ROUND_NUMBERS, WIDTH, HEIGHT
 
 class Dot:
     def __init__(self, x: float = 0, y: float = 0) -> None:
@@ -44,9 +45,20 @@ class Dot:
         d = sqrt((self.x - dot.x) ** 2 + (self.y - dot.y) ** 2)
         return round(d, ROUND_NUMBERS)
 
+    def rotate(self, origin: Self, angle: int) -> tuple:
+        a = self.x - origin.x
+        b = self.y - origin.y
+        r = sqrt(a ** 2 + b ** 2)
+        
+        try:
+            alpha = degrees(atan(b / a))
+        except ZeroDivisionError:
+            alpha = 90 if b > 0 else 270
+    
+        beta = radians(alpha - angle)
+        x, y = floor(r * cos(beta)), floor(r * sin(beta))
+        
+        return x, y
+
     def __str__(self) -> str:
         return f'({self.x}, {self.y})'
-
-if __name__ == '__main__':
-    filename = __file__.split('\\')[-1]
-    print(f'{filename} {SOURCE_FILE}')
