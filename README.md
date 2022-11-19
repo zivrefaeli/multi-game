@@ -1,4 +1,4 @@
-## Project In Development
+## Dev Branch
 
 ![Player](/assets/player.png)
 
@@ -6,12 +6,14 @@
 
 Run server
 ```bash
-python ./server.py
+python ./main.py -server
+python ./main.py -s
 ```
 
 Start client
 ```bash
-python ./client.py
+python ./main.py -client
+python ./main.py -c
 ```
 
 By Ziv Refaeli
