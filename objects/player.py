@@ -1,4 +1,5 @@
 from time import sleep
+from math import sqrt
 from threading import Thread
 from pygame import font, transform, image
 from pygame.surface import Surface
@@ -22,6 +23,7 @@ class Player:
     SIZE = 50 # px
     DIMENTIONS = (SIZE, SIZE)
     ID_DELTA = int(SIZE / 2 + 15)
+    RADIUS = sqrt(2) / 2 * SIZE
     SPEED = .5 # px/frame
     MAX_AMMO = 30
     RELOAD_TIME = 1 # sec
@@ -39,7 +41,7 @@ class Player:
         self.accelerating = False
         self.crouching = False
 
-        self.bullets = []
+        self.bullets: list[Bullet] = []
         self.shooting = False
         self.reloading = False
         self.ammo = self.MAX_AMMO
@@ -152,6 +154,25 @@ class Player:
         sleep(self.RELOAD_TIME)
         self.reloading = False
         self.ammo = self.MAX_AMMO
+
+    def hit(self, other_pos: Dot, other_angle: int) -> int:
+        damage = 0
+        i = 0
+        d = self.SIZE / 2
+
+        while i < len(self.bullets):
+            bullet = self.bullets[i]
+            if bullet.position.distance(other_pos) > self.RADIUS:
+                i += 1
+                continue
+            
+            x, y = bullet.position.rotate(other_pos, other_angle)
+            if -d <= x <= d and -d <= y <= d:
+                damage += 1
+                self.bullets.pop(i)
+            else:
+                i += 1
+        return damage
 
     def json(self) -> dict:
         return {
