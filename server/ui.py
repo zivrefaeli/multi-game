@@ -66,13 +66,14 @@ class ServerUI(Tk):
         self.textarea.delete('1.0', END) # clear text
 
         text = []
-        for user in CONNECTED_USERS:
-            if not user in DATABASE:
+        for user in CONNECTED_CLIENTS:
+            if not user in CLIENTS_DATA:
                 continue
-            user_data = DATABASE[user]
+            user_data = CLIENTS_DATA[user]
             text.append(f'{user}: {{')
-            text.append(f'    position: {user_data[Json.POS]},')
-            text.append(f'    angle: {user_data[Json.ANGLE]}')
+            text.append(f'    position: {user_data[Json.POS]}')
+            text.append(f'    angle: {user_data[Json.ANGLE]}°')
+            text.append(f'    health: {CLIENTS_HEALTH[user]}♥')
             text.append('}\n')
 
         if len(text) == 0:
