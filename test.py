@@ -1,27 +1,6 @@
 import pygame
 from pygame import time, mouse, display
-from objects import *
-from math import sqrt, degrees, atan, cos, sin, radians
-
-R_MAX = sqrt(2) / 2 * Player.SIZE
-
-def hitbox(bullet: Dot, clone: Dot, angle: int) -> bool:
-    # relative dot (a, b) to clone position as origin
-    a = bullet.x - clone.x
-    b = bullet.y - clone.y
-    r = sqrt(a ** 2 + b ** 2)
-
-    try:
-        alpha = degrees(atan(b / a))
-    except ZeroDivisionError:
-        alpha = 90 if b > 0 else 270
-    
-    j = alpha - angle
-    beta = radians(j)
-    x, y = round(r * cos(beta)), round(r * sin(beta))
-    d = Player.SIZE / 2
-
-    return -d <= x <= d and -d <= y <= d
+from objects import Player, WIDTH, HEIGHT, WHITE
 
 
 def main():
@@ -35,6 +14,9 @@ def main():
     display.set_caption(f'{player.id} screan')
 
     clock = time.Clock()
+
+    enemy = Player('Enemy')
+    enemy.angle = 30
 
     while run:
         clock.tick(60)
@@ -70,10 +52,15 @@ def main():
                 if e.button == 1:
                     player.shooting = False
         
+        player.rotate_to(mouse.get_pos())
+
         if player.shooting:
             player.shoot()
 
-        player.rotate_to(mouse.get_pos())
+        if player.hit(enemy.position, enemy.angle):
+            enemy.health -= 1
+
+        enemy.display(window)
         player.display(window)
         
         display.update()
