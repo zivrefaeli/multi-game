@@ -1,94 +1,60 @@
 import socket
 from threading import Thread
 from .data import *
-from objects import App, Packet, Type
+from objects import App, Packet, Type, Player, ServerData, ClientData, VALID, INVALID 
 
 
 class HandleClient(Thread):
-    VALID = 'valid'
-    INVALID = 'invalid'
-
-    SERVER_DATA = 'SERVER_DATA'
-    CLIENTS = 'CLIENTS'
-    DAMAGE = 'DAMAGE'
-
-    def __init__(self, client: socket.socket, address: tuple[str, int], id: str) -> None:
+    def __init__(self, client: socket.socket, id: str) -> None:
         super().__init__()
-        self.setName(f'{id}`s thread')
+        self.setName(f'Handle {id} Thread')
         self.client = client
-        self.address = address
         self.id = id
+        
+        self.server_packet = Packet('SERVER_DATA')
 
     def run(self) -> None:
-        status = self.INVALID if self.id in CONNECTED_USERS else self.VALID 
+        status = INVALID if self.id in CONNECTED_CLIENTS else VALID
         App.send(self.client, Packet(Type.ID_STATUS, status))
 
-        if status == self.INVALID:
+        if status == INVALID:
             print('client joined with invalid id')
             self.client.close()
             return
-        CONNECTED_USERS.add(self.id)
+        CONNECTED_CLIENTS.add(self.id)
+        CLIENTS_HEALTH[self.id] = Player.FULL_HEALTH
 
         while True:
-            packet = App.receive(self.client)
-
-            if packet.type == Type.ERROR:
+            client_packet = App.receive(self.client)
+            if client_packet.type == Type.ERROR:
                 break # no response
-            if packet.type == Type.DISCONNECT:
+            if client_packet.type == Type.DISCONNECT:
                 print(f'{self.id} disconnected from the server')
                 break # no response
-            if packet.type == Type.SERVER_CLOSED:
+            if client_packet.type == Type.SERVER_CLOSED:
                 print(f'[{self.id}]: server closed - dissconnecting!')
                 App.send(self.client, Packet(Type.SERVER_CLOSED))
                 break
 
-            # # TODO: calculate how match damage this client recevied - on client side !
-            # damage = self.get_attack()
+            CLIENTS_DATA[self.id] = client_packet.data[ClientData.JSON]
+            damage_to = client_packet.data[ClientData.DAMAGE_TO]
+            for id in damage_to:
+                CLIENTS_HEALTH[id] -= damage_to[id]
+                
+                # TODO: TEMP
+                if CLIENTS_HEALTH[id] <= 0:
+                    CLIENTS_HEALTH[id] = Player.FULL_HEALTH
 
-            DATABASE[self.id] = packet.data
-            App.send(self.client, Packet(self.SERVER_DATA, {
-                self.CLIENTS: DATABASE,
-                self.DAMAGE: 0
-            }))
+            self.server_packet.data = {
+                ServerData.CLIENTS: CLIENTS_DATA,
+                ServerData.HEALTH: CLIENTS_HEALTH[self.id]
+            }
+            App.send(self.client, self.server_packet)
 
-        print(f'deleting {self.id} data: {DATABASE.pop(self.id)}')
-        CONNECTED_USERS.remove(self.id)
+        if self.id in CLIENTS_DATA:
+            print(f'deleting {self.id} data: {CLIENTS_DATA.pop(self.id)}')
+        CLIENTS_HEALTH.pop(self.id)
+        CONNECTED_CLIENTS.remove(self.id)
 
         self.client.close()
         print('client thread ended')
-
-    # def get_attack(self) -> int:
-    #     attack = 0
-
-    #     for id in DATABASE:
-    #         if id == self.id:
-    #             continue
-    #         clone = Clone(DATABASE[id])
-
-    #         i = 0
-    #         while i < len(clone.bullets):
-    #             bullet = clone.bullets[i]
-    #             if self.hitbox(bullet, clone.position, clone.angle):
-    #                 attack += 1
-    #                 clone.bullets.pop(i)
-    #             else:
-    #                 i += 1
-
-    #     return attack
-
-    # def hitbox(self, bullet: Dot, clone: Dot, angle: int) -> bool:
-    #     # relative dot (a, b) to clone position as origin
-    #     a = bullet.x - clone.x
-    #     b = bullet.y - clone.y
-    #     r = sqrt(a ** 2 + b ** 2)
-
-    #     try:
-    #         alpha = degrees(atan(b / a))
-    #     except ZeroDivisionError:
-    #         alpha = 90 if b > 0 else 270
-        
-    #     beta = radians(alpha - angle)
-    #     x, y = round(r * cos(beta)), round(r * sin(beta))
-    #     d = Player.SIZE / 2
-
-    #     return -d <= x <= d and -d <= y <= d
