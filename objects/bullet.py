@@ -13,6 +13,7 @@ class Bullet:
         self.position = position
         self.angle = angle
         self.velocity = Vector(self.SPEED, self.angle)
+        self.color = BLACK
     
     def update(self) -> None:
         dx, dy = self.velocity.get()
@@ -20,11 +21,11 @@ class Bullet:
         self.position.y += dy
 
     @staticmethod
-    def draw(position: Dot, surface: Surface) -> None:
-        draw.circle(surface, BLACK, position.convert(), Bullet.RADIUS)
+    def draw(surface: Surface, color: tuple[int, int, int], position: Dot) -> None:
+        draw.circle(surface, color, position.convert(), Bullet.RADIUS)
 
     def display(self, surface: Surface) -> None:
-        self.draw(self.position, surface)
+        self.draw(surface, self.color, self.position)
 
     def in_bounds(self) -> bool:
         x, y = self.position.convert()
