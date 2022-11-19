@@ -40,11 +40,11 @@ def handle_events(connection: ClientConnection, player: Player) -> None:
 
 # delete clients which left the server
 def remove_clients(locals: dict[str, Clone], clients: dict[str, dict]) -> None:
-    pops = []
-    for key in locals.keys():
+    keys = []
+    for key in locals:
         if key not in clients:
-            pops.append(key)
-    for key in pops:
+            keys.append(key)
+    for key in keys:
         locals.pop(key)
 
 
@@ -79,7 +79,7 @@ def cmain() -> None:
         if player.shooting:
             player.shoot()
 
-        # remove_clients(local_clones, connection.clones)
+        remove_clients(local_clones, connection.clones)
 
         for clone_id in connection.clones:
             if clone_id == connection.id:
