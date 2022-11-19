@@ -10,7 +10,7 @@ class ClientsListener(Thread):
         self.setName('Clients Listener Thread')
         self.server = server
         self.address = self.server.getsockname()
-        self.clients_threads = []
+        self.clients_threads: list[HandleClient] = []
 
     def run(self) -> None:
         while True:
@@ -25,7 +25,7 @@ class ClientsListener(Thread):
             elif init_packet.type == Type.SEND_ID:
                 client_id = str(init_packet.data)
 
-                client_thread = HandleClient(client, client_address, client_id)
+                client_thread = HandleClient(client, client_id)
                 client_thread.start()
 
                 self.clients_threads.append(client_thread)
