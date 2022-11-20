@@ -1,8 +1,8 @@
 import pygame
-from pygame import display, time, mouse, event
+from pygame import display, time, mouse, event, surface, image, font
 from .ui import ClientUI
 from .connection import ClientConnection
-from objects import Json, Player, Clone, Bullet, WIDTH, HEIGHT, FPS, WHITE
+from objects import Json, Player, Clone, Bullet, Dot, WIDTH, HEIGHT, FPS, BLACK, WHITE 
 
 
 def handle_events(connection: ClientConnection, player: Player) -> None:
@@ -46,6 +46,31 @@ def remove_clients(locals: dict[str, Clone], clients: dict[str, dict]) -> None:
             keys.append(key)
     for key in keys:
         locals.pop(key)
+
+
+def display_player_ammo(window: surface.Surface, ammo: int) -> None:
+    BULLET = image.load('./assets/bullet.png')
+    BULLET_DIMENTIONS = (4, 12)
+    NUMBER_OF_BULLETS = 3
+    AMMO_PER_BULLET = int(Player.MAX_AMMO / NUMBER_OF_BULLETS)
+    AMMO_FONT = font.SysFont('Times', 16)
+    PADDING = 10
+    GAP = 2
+
+    dot = Dot(PADDING, HEIGHT - PADDING)
+    bullets = ammo // AMMO_PER_BULLET + int(ammo % AMMO_PER_BULLET != 0)
+    
+    ammo_text = AMMO_FONT.render(f'{ammo}/{Player.MAX_AMMO}', True, BLACK)
+    text_rect = ammo_text.get_rect(bottomleft=dot.get())
+
+    window.blit(ammo_text, text_rect)
+
+    dot.x += text_rect.width + PADDING
+    dot.y -= text_rect.height / 2
+
+    for _ in range(bullets):
+        window.blit(BULLET, BULLET.get_rect(midleft=dot.get()))
+        dot.x += BULLET_DIMENTIONS[0] + GAP
 
 
 def cmain() -> None:
@@ -97,6 +122,8 @@ def cmain() -> None:
                 local_clones[clone_id].update_json(clone_json)
             local_clones[clone_id].display(window)
         
+        display_player_ammo(window, player.ammo)
+
         player.display(window)
         display.update()
 

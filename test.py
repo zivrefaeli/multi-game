@@ -1,6 +1,30 @@
 import pygame
-from pygame import time, mouse, display
-from objects import Player, WIDTH, HEIGHT, WHITE
+from pygame import time, mouse, display, surface, image, font
+from objects import Player, Dot, WIDTH, HEIGHT, WHITE, BLACK
+
+def display_player_ammo(window: surface.Surface, ammo: int) -> None:
+    NUMBER_OF_BULLETS = 3
+    BULLET_DIMENTIONS = (4, 12)
+    PADDING = 10
+    GAP = 2
+    AMMO_FONT = font.SysFont('Times', 16)
+    AMMO_PER_BULLET = int(Player.MAX_AMMO / NUMBER_OF_BULLETS)
+    BULLET = image.load('./assets/bullet.png')
+
+    dot = Dot(PADDING, HEIGHT - PADDING)
+    bullets = ammo // AMMO_PER_BULLET + int(ammo % AMMO_PER_BULLET != 0)
+    
+    ammo_text = AMMO_FONT.render(f'{ammo}/{Player.MAX_AMMO}', True, BLACK)
+    text_rect = ammo_text.get_rect(bottomleft=dot.get())
+
+    window.blit(ammo_text, text_rect)
+
+    dot.x += text_rect.width + PADDING
+    dot.y -= text_rect.height / 2
+
+    for _ in range(bullets):
+        window.blit(BULLET, BULLET.get_rect(midleft=dot.get()))
+        dot.x += BULLET_DIMENTIONS[0] + GAP
 
 
 def main():
@@ -52,7 +76,9 @@ def main():
                 if e.button == 1:
                     player.shooting = False
         
-        player.rotate_to(mouse.get_pos())
+        m = mouse.get_pos()
+        # print(m)
+        player.rotate_to(m)
 
         if player.shooting:
             player.shoot()
@@ -61,6 +87,9 @@ def main():
             enemy.health -= 1
 
         enemy.display(window)
+
+        display_player_ammo(window, player.ammo)
+
         player.display(window)
         
         display.update()
