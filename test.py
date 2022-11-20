@@ -35,7 +35,7 @@ def main():
 
     player = Player()
     display.set_icon(player.icon)
-    display.set_caption(f'{player.id} screan')
+    display.set_caption(f'{player.id} screen')
 
     clock = time.Clock()
 
