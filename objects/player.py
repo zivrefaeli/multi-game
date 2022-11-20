@@ -43,7 +43,6 @@ class Player:
 
         self.bullets: list[Bullet] = []
         self.shooting = False
-        self.reloading = False
         self.ammo = self.MAX_AMMO
 
         self.color = Methods.random_color()
@@ -145,14 +144,12 @@ class Player:
             bullet = Bullet(self.position.copy(), self.angle)
             self.bullets.append(bullet)
             self.ammo -= 1
-        elif not self.reloading:
-            self.reloading = True
-            reload_thread = Thread(target=self.reload)
-            reload_thread.start()
+            if self.ammo == 0:
+                reload_thread = Thread(target=self.reload)
+                reload_thread.start()
 
     def reload(self) -> None:
         sleep(self.RELOAD_TIME)
-        self.reloading = False
         self.ammo = self.MAX_AMMO
 
     def hit(self, other_pos: Dot, other_angle: int) -> int:
