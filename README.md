@@ -1,8 +1,11 @@
-## Dev Branch
+# Multi Game
+A multiplayer game on LAN developed in Python with UI libraries
 
-![Player](/assets/player.png)
+## Demo
+TODO: add a gif
 
-# Usage
+## Usage
+Clone the repository and run the main.py file with a flag
 
 Run server
 ```bash
@@ -10,7 +13,7 @@ python ./main.py -server
 python ./main.py -s
 ```
 
-Start client
+Run client
 ```bash
 python ./main.py -client
 python ./main.py -c
