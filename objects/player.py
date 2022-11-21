@@ -141,11 +141,12 @@ class Player:
 
     def shoot(self) -> None:
         if self.ammo > 0:
-            bullet = Bullet(self.position.copy(), self.angle)
+            bullet = Bullet(self.position.copy(), self.angle, self.color)
             self.bullets.append(bullet)
             self.ammo -= 1
             if self.ammo == 0:
                 reload_thread = Thread(target=self.reload)
+                reload_thread.setName('Reload')
                 reload_thread.start()
 
     def reload(self) -> None:
