@@ -2,6 +2,7 @@ import pygame
 from pygame import time, mouse, display, surface, image, font
 from objects import Player, Dot, WIDTH, HEIGHT, WHITE, BLACK
 
+
 def display_player_ammo(window: surface.Surface, ammo: int) -> None:
     NUMBER_OF_BULLETS = 3
     BULLET_DIMENTIONS = (4, 12)
@@ -35,7 +36,7 @@ def main():
 
     player = Player()
     display.set_icon(player.icon)
-    display.set_caption(f'{player.id} screen')
+    display.set_caption(f'{player.id}\' screen')
 
     clock = time.Clock()
 
@@ -44,7 +45,7 @@ def main():
 
     while run:
         clock.tick(60)
-        window.fill(WHITE)
+        window.fill(WHITE) 
 
         for e in pygame.event.get():
             if e.type == pygame.QUIT:
@@ -76,20 +77,15 @@ def main():
                 if e.button == 1:
                     player.shooting = False
         
-        m = mouse.get_pos()
-        # print(m)
-        player.rotate_to(m)
-
+        player.rotate_to(mouse.get_pos())
         if player.shooting:
             player.shoot()
-
+        
         if player.hit(enemy.position, enemy.angle):
             enemy.health -= 1
 
         enemy.display(window)
-
         display_player_ammo(window, player.ammo)
-
         player.display(window)
         
         display.update()
