@@ -7,6 +7,7 @@ class ClientConnection(Thread):
     def __init__(self, client: socket.socket, id: str) -> None:
         super().__init__()
         self.setName(f'{id} Connection Thread')
+        self.setDaemon(True)
         self.client = client
         self.id = id
         self.running = True
