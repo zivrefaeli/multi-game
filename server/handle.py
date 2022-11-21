@@ -43,7 +43,6 @@ class HandleClient(Thread):
                 if id not in CLIENTS_HEALTH: # if client left, you can't shoot him
                     continue
                 CLIENTS_HEALTH[id] -= damage_to[id]
-                # TODO: TEMP
                 if CLIENTS_HEALTH[id] <= 0:
                     CLIENTS_HEALTH[id] = Player.FULL_HEALTH
 

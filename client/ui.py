@@ -31,7 +31,7 @@ class ClientUI(Tk):
         self.set_join_button()
 
     def set_titles(self) -> None:
-        title_label = Label(self, text='Multi:Game', font=self.TITLE_FONT)
+        title_label = Label(self, text='Multi-Game', font=self.TITLE_FONT)
         title_label.pack(pady=(40, 0))
 
         sub_title_label = Label(self, text='Join a Mulit:Game server', font=self.LABEL_FONT)
