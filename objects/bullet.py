@@ -9,11 +9,11 @@ class Bullet:
     SPEED = 4
     RADIUS = 1
 
-    def __init__(self, position: Dot = Dot(), angle: int = 0) -> None:
+    def __init__(self, position: Dot = Dot(), angle: int = 0, color: tuple[int, int, int] = BLACK) -> None:
         self.position = position
         self.angle = angle
         self.velocity = Vector(self.SPEED, self.angle)
-        self.color = BLACK
+        self.color = color
     
     def update(self) -> None:
         dx, dy = self.velocity.get()
