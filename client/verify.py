@@ -1,7 +1,7 @@
 import socket
 from threading import Thread
 from tkinter import messagebox
-from objects import App, Packet, Type
+from objects import App, Packet, Type, INVALID
 
 
 class VerifyConnection(Thread):
@@ -22,11 +22,15 @@ class VerifyConnection(Thread):
         App.send(self.client, Packet(Type.SEND_ID, self.id))
         response = App.receive(self.client)
         
+        if response.type == Type.FULL_SERVER:
+            self.on_error('Server Message', 'The server is currently full')
+            return
+
         if response.type != Type.ID_STATUS:
             self.on_error(response.type, 'An error occurred')
             return
         
-        if response.data == 'invalid':
+        if response.data == INVALID:
             self.on_error('Invalid Id', 'This id already exists on the server')
             return
 

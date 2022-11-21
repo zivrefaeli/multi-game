@@ -5,6 +5,7 @@ class Type:
     SEND_ID = 'send_id'
     ID_STATUS = 'id_status'
     DISCONNECT = 'disconnect'
+    FULL_SERVER = 'full_server'
 
 
 class Packet:
