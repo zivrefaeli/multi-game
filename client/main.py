@@ -38,8 +38,7 @@ def handle_events(connection: ClientConnection, player: Player) -> None:
                 player.shooting = False
 
 
-# delete clients which left the server
-def remove_clients(locals: dict[str, Clone], clients: dict[str, dict]) -> None:
+def remove_locals(locals: dict[str, Clone], clients: dict[str, dict]) -> None:
     keys = []
     for key in locals:
         if key not in clients:
@@ -104,7 +103,7 @@ def cmain() -> None:
         if player.shooting:
             player.shoot()
 
-        remove_clients(local_clones, connection.clones)
+        remove_locals(local_clones, connection.clones)
 
         for clone_id in connection.clones:
             if clone_id == connection.id:
@@ -114,8 +113,8 @@ def cmain() -> None:
             # display clones' bullets
             for position in clone_json[Json.BULLETS]:
                 Bullet.draw(window, clone_json[Json.COLOR], position)
-            
-            # display clones
+
+            # display clones            
             if not clone_id in local_clones:
                 local_clones[clone_id] = Clone(clone_json)
             else:
