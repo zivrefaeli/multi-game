@@ -145,8 +145,7 @@ class Player:
             self.bullets.append(bullet)
             self.ammo -= 1
             if self.ammo == 0:
-                reload_thread = Thread(target=self.reload)
-                reload_thread.setName('Reload')
+                reload_thread = Thread(target=self.reload, name='Reload', daemon=True)
                 reload_thread.start()
 
     def reload(self) -> None:

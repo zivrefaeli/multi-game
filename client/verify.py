@@ -8,6 +8,7 @@ class VerifyConnection(Thread):
     def __init__(self, client: socket.socket, result: tuple[str, int, str]) -> None:
         super().__init__()
         self.setName('Verify Connection Thread')
+        self.setDaemon(True)
         self.client = client
         *self.address, self.id = result
         self.verified = False

@@ -9,6 +9,7 @@ class ClientsListener(Thread):
     def __init__(self, server: socket.socket, max: int) -> None:
         super().__init__()
         self.setName('Clients Listener Thread')
+        self.setDaemon(True)
         self.server = server
         self.max = max
         self.address = self.server.getsockname()
