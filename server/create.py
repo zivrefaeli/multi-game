@@ -18,7 +18,7 @@ class CreateServerUI(Tk):
         self.port = StringVar()
         self.address = None
 
-        self.title('Create Server')
+        self.title('Create a Server')
         self.geometry(f'{self.WIDTH}x{self.HEIGHT}')
         self.resizable(False, False)
         self.iconbitmap(default='./assets/icon.ico')
@@ -28,7 +28,7 @@ class CreateServerUI(Tk):
         self.set_create_button()
 
     def set_titles(self) -> None:
-        title_label = Label(self, text='Multi:Game', font=self.TITLE_FONT)
+        title_label = Label(self, text='Multi-Game', font=self.TITLE_FONT)
         title_label.pack(pady=40)
 
         sub_title_label = Label(self, text='Run a server on your machine', font=self.LABEL_FONT)

@@ -1,8 +1,8 @@
 import pygame
-from pygame import display, time, mouse, event
+from pygame import display, time, mouse, event, surface, image, font
 from .ui import ClientUI
 from .connection import ClientConnection
-from objects import Json, Player, Clone, Bullet, WIDTH, HEIGHT, FPS, WHITE
+from objects import Json, Player, Clone, Bullet, Dot, WIDTH, HEIGHT, FPS, BLACK, WHITE 
 
 
 def handle_events(connection: ClientConnection, player: Player) -> None:
@@ -38,14 +38,38 @@ def handle_events(connection: ClientConnection, player: Player) -> None:
                 player.shooting = False
 
 
-# delete clients which left the server
-def remove_clients(locals: dict[str, Clone], clients: dict[str, dict]) -> None:
+def remove_locals(locals: dict[str, Clone], clients: dict[str, dict]) -> None:
     keys = []
     for key in locals:
         if key not in clients:
             keys.append(key)
     for key in keys:
         locals.pop(key)
+
+
+def display_player_ammo(window: surface.Surface, ammo: int) -> None:
+    BULLET = image.load('./assets/bullet.png')
+    BULLET_DIMENTIONS = (4, 12)
+    NUMBER_OF_BULLETS = 3
+    AMMO_PER_BULLET = int(Player.MAX_AMMO / NUMBER_OF_BULLETS)
+    AMMO_FONT = font.SysFont('Times', 16)
+    PADDING = 10
+    GAP = 2
+
+    dot = Dot(PADDING, HEIGHT - PADDING)
+    bullets = ammo // AMMO_PER_BULLET + int(ammo % AMMO_PER_BULLET != 0)
+    
+    ammo_text = AMMO_FONT.render(f'{ammo}/{Player.MAX_AMMO}', True, BLACK)
+    text_rect = ammo_text.get_rect(bottomleft=dot.get())
+
+    window.blit(ammo_text, text_rect)
+
+    dot.x += text_rect.width + PADDING
+    dot.y -= text_rect.height / 2
+
+    for _ in range(bullets):
+        window.blit(BULLET, BULLET.get_rect(midleft=dot.get()))
+        dot.x += BULLET_DIMENTIONS[0] + GAP
 
 
 def cmain() -> None:
@@ -79,7 +103,7 @@ def cmain() -> None:
         if player.shooting:
             player.shoot()
 
-        remove_clients(local_clones, connection.clones)
+        remove_locals(local_clones, connection.clones)
 
         for clone_id in connection.clones:
             if clone_id == connection.id:
@@ -89,14 +113,16 @@ def cmain() -> None:
             # display clones' bullets
             for position in clone_json[Json.BULLETS]:
                 Bullet.draw(window, clone_json[Json.COLOR], position)
-            
-            # display clones
+
+            # display clones            
             if not clone_id in local_clones:
                 local_clones[clone_id] = Clone(clone_json)
             else:
                 local_clones[clone_id].update_json(clone_json)
             local_clones[clone_id].display(window)
         
+        display_player_ammo(window, player.ammo)
+
         player.display(window)
         display.update()
 

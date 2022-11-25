@@ -16,6 +16,7 @@ class ClientUI(Tk):
     def __init__(self) -> None:
         super().__init__()
         self.verified = False
+        self.verify_conn: VerifyConnection = None
 
         self.ip = StringVar()
         self.port = StringVar()
@@ -25,13 +26,20 @@ class ClientUI(Tk):
         self.geometry(f'{self.WIDTH}x{self.HEIGHT}')
         self.resizable(False, False)
         self.iconbitmap(default='./assets/icon.ico')
+        self.protocol('WM_DELETE_WINDOW', self.close)
         
         self.set_titles()
         self.set_entries()
         self.set_join_button()
 
+    def close(self) -> None:
+        if self.verify_conn:
+            if self.verify_conn.is_alive():
+                return
+        self.destroy()
+
     def set_titles(self) -> None:
-        title_label = Label(self, text='Multi:Game', font=self.TITLE_FONT)
+        title_label = Label(self, text='Multi-Game', font=self.TITLE_FONT)
         title_label.pack(pady=(40, 0))
 
         sub_title_label = Label(self, text='Join a Mulit:Game server', font=self.LABEL_FONT)

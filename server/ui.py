@@ -13,7 +13,7 @@ class ServerUI(Tk):
     TITLE_FONT = ('Times', 20)
     LABEL_FONT = ('Calibri', 11)
     IP_FONT = ('Consolas', 11, 'bold')
-    USERS_CAPACITY = 10
+    USERS_CAPACITY = 3
     UI_DELAY = 300 # ms
 
     def __init__(self, address: tuple[str, int]) -> None:
@@ -21,7 +21,7 @@ class ServerUI(Tk):
         self.running = True
         self.address = address
 
-        self.title('Multi:Game Server')
+        self.title('Multi-Game Server')
         self.geometry(f'{self.WIDTH}x{self.HEIGHT}')
         self.resizable(False, False)
         self.iconbitmap(default='./assets/icon.ico')
@@ -73,7 +73,7 @@ class ServerUI(Tk):
             text.append(f'{user}: {{')
             text.append(f'    position: {user_data[Json.POS]}')
             text.append(f'    angle: {user_data[Json.ANGLE]}°')
-            text.append(f'    health: {CLIENTS_HEALTH[user]}♥')
+            text.append(f'    health: {CLIENTS_HEALTH[user]} ♥')
             text.append('}\n')
 
         if len(text) == 0:
@@ -87,7 +87,7 @@ class ServerUI(Tk):
         self.server.bind(self.address)
         self.server.listen(self.USERS_CAPACITY)
 
-        self.listener = ClientsListener(self.server)
+        self.listener = ClientsListener(self.server, self.USERS_CAPACITY)
         self.listener.start()
 
         self.update_ui()

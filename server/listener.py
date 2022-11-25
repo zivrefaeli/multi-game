@@ -1,14 +1,17 @@
 import socket
 from threading import Thread
 from .handle import HandleClient
+from .data import CONNECTED_CLIENTS
 from objects import App, Packet, Type
 
 
 class ClientsListener(Thread):
-    def __init__(self, server: socket.socket) -> None:
+    def __init__(self, server: socket.socket, max: int) -> None:
         super().__init__()
         self.setName('Clients Listener Thread')
+        self.setDaemon(True)
         self.server = server
+        self.max = max
         self.address = self.server.getsockname()
         self.clients_threads: list[HandleClient] = []
 
@@ -23,6 +26,11 @@ class ClientsListener(Thread):
                 break
             
             elif init_packet.type == Type.SEND_ID:
+                if len(CONNECTED_CLIENTS) == self.max:
+                    App.send(client, Packet(Type.FULL_SERVER))
+                    print('server is full')
+                    continue
+
                 client_id = str(init_packet.data)
 
                 client_thread = HandleClient(client, client_id)
