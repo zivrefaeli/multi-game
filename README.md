@@ -1,31 +1,29 @@
 # Multi Game
 A multiplayer game on LAN developed in Python with UI libraries.
 <br />
-Server is based on multithreading method. In future it will use _Select_ library.
+The server is based on multithreading. In the future it will use the _Select_ library.
 
 ## Demo
-Two clients inside the server
+For example, two clients inside a server
 
 ![multi-game](/assets/demo.gif)
 
 ## Usage
-Run the **main.py** file with a _Flag_ starts with - / --
+Run the **main.py** file with a _Flag_ starts with - / -- / empty
 | Server Flags | Client Flags |
 | ------ | ------ |
 | server | client |
 | s | c |
 
-Run server
+Start a server
 ```bash
-python ./main.py -server
-python ./main.py -s
+python ./main.py --server
 ```
 
-Run client
+Run a client
 ```bash
-python ./main.py -client
-python ./main.py -c
+python ./main.py --client
 ```
 
 ## License
-multi-game was created by Ziv Refaeli and released under the MIT license
+multi-game was created by Ziv Refaeli and released under the [MIT license](https://github.com/zivrefaeli/multi-game/blob/master/LICENCE)
