@@ -1,6 +1,0 @@
-imports:
-
-1. inclueded: math, socket, os, sys, tkinter...
-2. installed: pygame...
-3. locals-a: from .<moudle> import <stuff>
-4. locals-b: from <package> import <stuff> 
