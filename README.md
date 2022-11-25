@@ -28,4 +28,4 @@ python ./main.py -c
 ```
 
 ## License
-multi-game was created by Ziv Refaeli and released under the [MIT license](https://github.com/zivrefaeli/multi-game/blob/master/LICENCE).
+multi-game was created by Ziv Refaeli and released under the MIT license
