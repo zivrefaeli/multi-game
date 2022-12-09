@@ -7,9 +7,7 @@ from objects import App, Packet, Type
 
 class ClientsListener(Thread):
     def __init__(self, server: socket.socket, max: int) -> None:
-        super().__init__()
-        self.setName('Clients Listener Thread')
-        self.setDaemon(True)
+        super().__init__(name='Clients Listener Thread', daemon=True)
         self.server = server
         self.max = max
         self.address = self.server.getsockname()
@@ -18,7 +16,7 @@ class ClientsListener(Thread):
     def run(self) -> None:
         while True:
             client, client_address = self.server.accept()
-            print('client conected from', client_address)
+            print('client connected from', client_address)
 
             init_packet = App.receive(client)
 

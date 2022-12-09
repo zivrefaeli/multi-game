@@ -78,7 +78,7 @@ class Validate:
                 return result
             
             if not section.isnumeric():
-                result[Validate.MESSAGE] = 'IP section should contaion only digits'
+                result[Validate.MESSAGE] = 'IP section should contain only digits'
                 return result
 
             value = int(section)
