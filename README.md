@@ -1,7 +1,7 @@
 # Multi Game
 A multiplayer game on LAN developed in Python with UI libraries.
 <br />
-Server is based on multithreading method. In future it will use _Select_ library.
+The server is based on `multithreading` and sockets using the `TCP protocol`.
 
 ## Demo
 Two clients inside the server
@@ -9,22 +9,14 @@ Two clients inside the server
 ![multi-game](/assets/demo.gif)
 
 ## Usage
-Run the **main.py** file with a _Flag_ starts with - / --
-| Server Flags | Client Flags |
-| ------ | ------ |
-| server | client |
-| s | c |
+Run `main.py` with a command followed by a hyphen (-):
 
-Run server
 ```bash
-python ./main.py -server
-python ./main.py -s
-```
+python main.py -<command>
 
-Run client
-```bash
-python ./main.py -client
-python ./main.py -c
+Commands:
+s, server = start a server
+c, client = run a client
 ```
 
 ## License
