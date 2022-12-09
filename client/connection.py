@@ -5,9 +5,7 @@ from objects import Player, Packet, Type, App, ClientData, ServerData, Json
 
 class ClientConnection(Thread):
     def __init__(self, client: socket.socket, id: str) -> None:
-        super().__init__()
-        self.setName(f'{id} Connection Thread')
-        self.setDaemon(True)
+        super().__init__(name=f'{id} Connection Thread', daemon=True)
         self.client = client
         self.id = id
         self.running = True
@@ -26,7 +24,7 @@ class ClientConnection(Thread):
 
             server_packet = App.receive(self.client)
             if server_packet.type == Type.ERROR:
-                print('error occured on receive data')
+                print('error occurred on receive data')
                 break
             if server_packet.type == Type.SERVER_CLOSED:
                 print('server closed')

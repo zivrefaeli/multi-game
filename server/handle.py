@@ -6,9 +6,7 @@ from objects import App, Packet, Type, Player, ServerData, ClientData, VALID, IN
 
 class HandleClient(Thread):
     def __init__(self, client: socket.socket, id: str) -> None:
-        super().__init__()
-        self.setName(f'Handle {id} Thread')
-        self.setDaemon(True)
+        super().__init__(name=f'Handle {id} Thread', daemon=True)
         self.client = client
         self.id = id
         
@@ -33,7 +31,7 @@ class HandleClient(Thread):
                 print(f'{self.id} disconnected from the server')
                 break # no response
             if client_packet.type == Type.SERVER_CLOSED:
-                print(f'[{self.id}]: server closed - dissconnecting!')
+                print(f'[{self.id}]: server closed - disconnecting!')
                 App.send(self.client, Packet(Type.SERVER_CLOSED))
                 break
 

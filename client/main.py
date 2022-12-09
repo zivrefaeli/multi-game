@@ -49,7 +49,7 @@ def remove_locals(locals: dict[str, Clone], clients: dict[str, dict]) -> None:
 
 def display_player_ammo(window: surface.Surface, ammo: int) -> None:
     BULLET = image.load('./assets/bullet.png')
-    BULLET_DIMENTIONS = (4, 12)
+    BULLET_DIMENSIONS = (4, 12)
     NUMBER_OF_BULLETS = 3
     AMMO_PER_BULLET = int(Player.MAX_AMMO / NUMBER_OF_BULLETS)
     AMMO_FONT = font.SysFont('Times', 16)
@@ -69,7 +69,7 @@ def display_player_ammo(window: surface.Surface, ammo: int) -> None:
 
     for _ in range(bullets):
         window.blit(BULLET, BULLET.get_rect(midleft=dot.get()))
-        dot.x += BULLET_DIMENTIONS[0] + GAP
+        dot.x += BULLET_DIMENSIONS[0] + GAP
 
 
 def cmain() -> None:
